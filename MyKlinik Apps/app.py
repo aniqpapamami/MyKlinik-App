@@ -1,49 +1,14 @@
+import requests
 from flask import Flask, render_template, request, jsonify
-import firebase_admin
-from firebase_admin import credentials, db
-import os
-import json
 
 app = Flask(__name__)
 
-# GANTIKAN 'KOD_RAHSIA_DATABASE' dengan kod yang anda salin di Langkah 1
-# GANTIKAN URL dengan URL database anda yang betul
-if not firebase_admin._apps:
-    cred = credentials.InternalServiceAccountCredentials() # Ini sekadar placeholder
-    firebase_admin.initialize_app(None, {
-        'databaseURL': 'https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app',
-        'databaseAuthVariableOverride': None
-    })
-
-# Fungsi alternatif untuk akses database menggunakan Secret
-def get_db_ref(path):
-    # GANTIKAN Teks di bawah dengan Secret dari Firebase Langkah 1
-    SECRET = gR5AQrjY7m8ZXbTUO1ZXFR2PJ0GPlcSWrWCvshJF 
-    return db.reference(path, url='https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app' + SECRET)
-
-# --- UBAH FUNGSI API ANDA ---
-
-@app.route('/api/daftar', methods=['POST'])
-def daftar_pesakit():
-    nama = request.json.get('nama')
-    ref_jumlah = get_db_ref('jumlah_giliran') # Guna fungsi baru
-    no_baru = (ref_jumlah.get() or 0) + 1
-    ref_jumlah.set(no_baru)
-    
-    get_db_ref(f'senarai_pesakit/{no_baru}').set({
-        'nama': nama,
-        'no_giliran': no_baru,
-        'status': 'menunggu'
-    })
-    return jsonify({'no_giliran': no_baru, 'nama': nama})
-
-@app.route('/api/status_live')
-def status_live():
-    no_sekarang = get_db_ref('nombor_sekarang').get() or 0 # Guna fungsi baru
-    return jsonify({'nombor_sekarang': no_sekarang})
+# URL Database anda - PASTIKAN URL INI BETUL
+# Nota: Wajib ada /.json di hujung URL untuk cara ini berfungsi
+BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app"
 
 @app.route('/')
-def home():
+def index():
     return render_template('daftar.html')
 
 @app.route('/status_page')
@@ -54,35 +19,42 @@ def status_page():
 def admin_page():
     return render_template('admin.html')
 
-# API: Ambil Nombor (Untuk daftar.html)
+# API: DAFTAR PESAKIT
 @app.route('/api/daftar', methods=['POST'])
 def daftar_pesakit():
     nama = request.json.get('nama')
-    ref_jumlah = db.reference('jumlah_giliran')
-    no_baru = (ref_jumlah.get() or 0) + 1
-    ref_jumlah.set(no_baru)
     
-    db.reference(f'senarai_pesakit/{no_baru}').set({
+    # 1. Ambil jumlah giliran terkini
+    res = requests.get(f"{BASE_URL}/jumlah_giliran.json")
+    jumlah_sekarang = res.json() or 0
+    no_baru = jumlah_sekarang + 1
+    
+    # 2. Simpan nombor baru & data pesakit
+    requests.put(f"{BASE_URL}/jumlah_giliran.json", json=no_baru)
+    requests.put(f"{BASE_URL}/senarai_pesakit/{no_baru}.json", json={
         'nama': nama,
         'no_giliran': no_baru,
         'status': 'menunggu'
     })
+    
     return jsonify({'no_giliran': no_baru, 'nama': nama})
 
-# API: Panggil Seterusnya (Untuk admin.html)
+# API: PANGGIL SETERUSNYA (ADMIN)
 @app.route('/api/next', methods=['POST'])
 def panggil_next():
-    ref_sekarang = db.reference('nombor_sekarang')
-    no_skrg = (ref_sekarang.get() or 0) + 1
-    ref_sekarang.set(no_skrg)
-    return jsonify({'nombor_sekarang': no_skrg})
+    res = requests.get(f"{BASE_URL}/nombor_sekarang.json")
+    no_sekarang = res.json() or 0
+    no_baru = no_sekarang + 1
+    
+    requests.put(f"{BASE_URL}/nombor_sekarang.json", json=no_baru)
+    return jsonify({'nombor_sekarang': no_baru})
 
-# API: Get Status Live (Untuk status.html)
+# API: AMBIL STATUS LIVE
 @app.route('/api/status_live')
 def status_live():
-    no_sekarang = db.reference('nombor_sekarang').get() or 0
+    res = requests.get(f"{BASE_URL}/nombor_sekarang.json")
+    no_sekarang = res.json() or 0
     return jsonify({'nombor_sekarang': no_sekarang})
 
 if __name__ == '__main__':
     app.run(debug=True)
-	
