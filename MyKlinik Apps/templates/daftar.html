@@ -1,40 +1,90 @@
-<!DOCTYPE html>
-<html>
+<html lang="ms">
 <head>
-    <title>SELAMAT DATANG KE KLINIK SAYA</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Giliran - MyKlinik</title>
+    <link href="https://cdn.jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Poppins', sans-serif; }
+        .hero-section { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; padding: 40px 20px; border-radius: 0 0 50px 50px; }
+        .reg-card { margin-top: -30px; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .info-video { border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    </style>
 </head>
-<body style="text-align:center; font-family:sans-serif; padding-top:50px;">
-    <h1>Daftar Giliran</h1>
-    <input type="text" id="nama" placeholder="Nama Anda" style="padding:10px; width:250px;"><br><br>
-    <button onclick="hantar()" id="btn" style="padding:10px 20px; background:blue; color:white; border:none;">Ambil Nombor</button>
+<body>
 
-    <div id="hasil" style="display:none; margin-top:30px; border:2px solid blue; padding:20px;">
-        <h2>Nombor Anda: <span id="no-anda"></span></h2>
-        <p>Nama: <span id="nama-anda"></span></p>
-        <a href="/status_page">Semak Status Live</a>
+<div class="hero-section text-center">
+    <i class="fas fa-clinic-medical fa-3x mb-3"></i>
+    <h1 class="fw-bold">Selamat Datang ke MyKlinik</h1>
+    <p>Ambil giliran anda secara digital dengan mudah.</p>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <!-- Kad Pendaftaran -->
+            <div class="card reg-card p-4 mb-4">
+                <div id="form-pendaftaran">
+                    <h5 class="text-center mb-4">Sila Masukkan Nama Anda</h5>
+                    <div class="mb-3">
+                        <input type="text" id="nama" class="form-control form-control-lg" placeholder="Nama Penuh (Contoh: Ali Bin Abu)">
+                    </div>
+                    <button onclick="hantar()" id="btn" class="btn btn-primary btn-lg w-100 shadow-sm">
+                        <i class="fas fa-ticket-alt me-2"></i>Ambil Nombor Giliran
+                    </button>
+                </div>
+
+                <!-- Paparan Berjaya -->
+                <div id="hasil" class="text-center" style="display:none;">
+                    <div class="alert alert-success py-4">
+                        <h6 class="mb-0">Pendaftaran Berjaya!</h6>
+                        <div class="display-1 fw-bold my-2" id="no-anda">--</div>
+                        <p class="mb-3">Nama: <strong id="nama-anda">--</strong></p>
+                        <a href="/status_page" class="btn btn-dark w-100 rounded-pill">Pantau Giliran Live</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bahagian Info Kesihatan / Video -->
+            <div class="mt-5">
+                <h5 class="fw-bold mb-3"><i class="fas fa-heartbeat text-danger me-2"></i>Info Kesihatan Hari Ini</h5>
+                <div class="info-video mb-3">
+                    <!-- Anda boleh ganti ID video YouTube di bawah -->
+                    <div class="ratio ratio-16x9">
+                        <iframe src="https://www.youtube.com" title="Info Kesihatan" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm p-3">
+                    <h6><i class="fas fa-lightbulb text-warning me-2"></i>Tips Pencegahan Selesema</h6>
+                    <p class="small text-muted mb-0">Pastikan anda kerap mencuci tangan dan memakai pelitup muka jika bergejala untuk melindungi orang sekeliling.</p>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <script>
-        function hantar() {
-            let namaVal = document.getElementById('nama').value;
-            if(!namaVal) return alert("Masukkan nama!");
+<script>
+    function hantar() {
+        let namaVal = document.getElementById('nama').value;
+        if(!namaVal) return alert("Sila masukkan nama anda.");
+        document.getElementById('btn').disabled = true;
+        document.getElementById('btn').innerText = "Sedang Memproses...";
 
-            document.getElementById('btn').disabled = true;
-
-            fetch('/api/daftar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({nama: namaVal})
-            })
-            .then(res => res.json())
-            .then(data => {
-                localStorage.setItem('no_saya', data.no_giliran);
-                document.getElementById('hasil').style.display = 'block';
-                document.getElementById('no-anda').innerText = data.no_giliran;
-                document.getElementById('nama-anda').innerText = data.nama;
-            });
-        }
-    </script>
+        fetch('/api/daftar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({nama: namaVal})
+        })
+        .then(res => res.json())
+        .then(data => {
+            localStorage.setItem('no_saya', data.no_giliran);
+            document.getElementById('form-pendaftaran').style.display = 'none';
+            document.getElementById('hasil').style.display = 'block';
+            document.getElementById('no-anda').innerText = data.no_giliran;
+            document.getElementById('nama-anda').innerText = data.nama;
+        });
+    }
+</script>
 </body>
 </html>

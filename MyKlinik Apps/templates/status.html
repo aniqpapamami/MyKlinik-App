@@ -1,62 +1,93 @@
-!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Status Giliran Live</title>
+    <title>Status Giliran Live - Klinik Saya</title>
+    <!-- Guna Bootstrap untuk design cepat & cantik -->
+    <link href="https://cdn.jsdelivr.net" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
-        .box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        .no-live { font-size: 80px; font-weight: bold; color: #e74c3c; margin: 10px 0; }
-        .info-saya { margin-top: 20px; padding: 15px; border-radius: 10px; background: #e8f0fe; border: 1px solid #1a73e8; }
+        body { background-color: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        .clinic-header { 
+            background: linear-gradient(135deg, #1a73e8, #0052cc); 
+            color: white; padding: 30px; border-radius: 0 0 30px 30px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .main-card {
+            background: white; border-radius: 20px; padding: 40px;
+            margin-top: -40px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .no-live { 
+            font-size: 120px; font-weight: 900; color: #d93025; 
+            text-shadow: 2px 2px 10px rgba(217, 48, 37, 0.2);
+            margin: 10px 0;
+        }
+        .info-saya { 
+            background: #e8f0fe; border-left: 5px solid #1a73e8;
+            padding: 20px; border-radius: 10px; margin-top: 20px;
+        }
+        .clinic-logo { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; border: 3px solid white; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>Nombor Sekarang</h2>
+
+<div class="clinic-header text-center">
+    <!-- GANTIKAN URL GAMBAR DI BAWAH DENGAN LOGO/GAMBAR KLINIK ANDA -->
+    <img src="https://cdn-icons-png.flaticon.com" class="clinic-logo" alt="Logo">
+    <h2 class="fw-bold">KLINIK SAYA</h2>
+    <p class="opacity-75">Kesihatan Anda Keutamaan Kami</p>
+</div>
+
+<div class="container">
+    <div class="main-card mx-auto" style="max-width: 500px;">
+        <span class="badge rounded-pill bg-danger mb-2">LIVE SEKARANG</span>
+        <h5 class="text-secondary text-uppercase">Nombor Sedang Dirawat</h5>
         <div id="no-live" class="no-live">--</div>
-        <hr>
-        <div id="section-saya" style="display:none;" class="info-saya">
-            <p>Nombor Giliran Anda:</p>
-            <div id="no-saya" style="font-size: 40px; font-weight: bold; color: #1a73e8;">--</div>
-            <p id="pesan-status" style="font-weight: bold; margin-top: 10px;"></p>
+        
+        <div id="section-saya" style="display:none;" class="info-saya shadow-sm">
+            <h6 class="text-primary mb-1">NOMBOR ANDA</h6>
+            <div id="no-saya" class="display-4 fw-bold text-dark">--</div>
+            <div id="pesan-status" class="mt-2 fw-bold"></div>
         </div>
+
+        <p class="text-muted mt-4 small">Sila bersedia di klinik jika baki giliran kurang dari 3 orang.</p>
     </div>
+</div>
 
-    <script>
-        const noSaya = localStorage.getItem('no_saya');
-        if (noSaya) {
-            document.getElementById('section-saya').style.display = 'block';
-            document.getElementById('no-saya').innerText = noSaya;
-        }
+<script>
+    const noSaya = localStorage.getItem('no_saya');
+    if (noSaya) {
+        document.getElementById('section-saya').style.display = 'block';
+        document.getElementById('no-saya').innerText = noSaya;
+    }
 
-        // Fungsi untuk ambil data dari Python API setiap 3 saat
-        function kemaskiniStatus() {
-            fetch('/api/status_live')
-            .then(res => res.json())
-            .then(data => {
-                const noSekarang = data.nombor_sekarang;
-                document.getElementById('no-live').innerText = noSekarang;
+    function kemaskiniStatus() {
+        fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
+            const noSekarang = data.nombor_sekarang;
+            document.getElementById('no-live').innerText = noSekarang;
 
-                if (noSaya) {
-                    const baki = noSaya - noSekarang;
-                    const pesan = document.getElementById('pesan-status');
-                    if (baki > 0) {
-                        pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
-                        pesan.style.color = "orange";
-                    } else if (baki === 0) {
-                        pesan.innerText = "GILIRAN ANDA! Sila masuk.";
-                        pesan.style.color = "green";
-                    } else {
-                        pesan.innerText = "Giliran anda telah selesai.";
-                        pesan.style.color = "grey";
-                    }
+            if (noSaya) {
+                const baki = noSaya - noSekarang;
+                const pesan = document.getElementById('pesan-status');
+                if (baki > 0) {
+                    pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
+                    pesan.className = "mt-2 fw-bold text-warning";
+                } else if (baki === 0) {
+                    pesan.innerText = "GILIRAN ANDA! Sila masuk.";
+                    pesan.className = "mt-2 fw-bold text-success animate-pulse";
+                } else {
+                    pesan.innerText = "Giliran anda telah selesai.";
+                    pesan.className = "mt-2 fw-bold text-secondary";
                 }
-            });
-        }
+            }
+        });
+    }
 
-        setInterval(kemaskiniStatus, 3000); // Automatik setiap 3 saat
-        kemaskiniStatus(); // Jalankan sekali masa mula buka
-    </script>
+    setInterval(kemaskiniStatus, 3000);
+    kemaskiniStatus();
+</script>
+
 </body>
 </html>
