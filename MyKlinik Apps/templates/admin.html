@@ -1,0 +1,40 @@
+html
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Admin Klinik</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        .btn-next { padding: 20px 40px; font-size: 24px; background: #28a745; color: white; border: none; border-radius: 10px; cursor: pointer; }
+        .no-display { font-size: 100px; color: blue; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Kawalan Giliran Klinik</h1>
+    <p>Nombor Sedang Dirawat:</p>
+    <div id="no-skrin" class="no-display">0</div>
+    <button class="btn-next" onclick="panggilSeterusnya()">Panggil Seterusnya</button>
+
+    <script>
+        function updateNo() {
+            fetch('/api/status_live')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('no-skrin').innerText = data.nombor_sekarang;
+            });
+        }
+
+        function panggilSeterusnya() {
+            fetch('/api/next', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('no-skrin').innerText = data.nombor_sekarang;
+            });
+        }
+
+        setInterval(updateNo, 2000);
+        updateNo();
+    </script>
+</body>
+</html>

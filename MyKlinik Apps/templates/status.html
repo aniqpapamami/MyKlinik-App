@@ -1,0 +1,62 @@
+!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Giliran Live</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
+        .box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        .no-live { font-size: 80px; font-weight: bold; color: #e74c3c; margin: 10px 0; }
+        .info-saya { margin-top: 20px; padding: 15px; border-radius: 10px; background: #e8f0fe; border: 1px solid #1a73e8; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Nombor Sekarang</h2>
+        <div id="no-live" class="no-live">--</div>
+        <hr>
+        <div id="section-saya" style="display:none;" class="info-saya">
+            <p>Nombor Giliran Anda:</p>
+            <div id="no-saya" style="font-size: 40px; font-weight: bold; color: #1a73e8;">--</div>
+            <p id="pesan-status" style="font-weight: bold; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <script>
+        const noSaya = localStorage.getItem('no_saya');
+        if (noSaya) {
+            document.getElementById('section-saya').style.display = 'block';
+            document.getElementById('no-saya').innerText = noSaya;
+        }
+
+        // Fungsi untuk ambil data dari Python API setiap 3 saat
+        function kemaskiniStatus() {
+            fetch('/api/status_live')
+            .then(res => res.json())
+            .then(data => {
+                const noSekarang = data.nombor_sekarang;
+                document.getElementById('no-live').innerText = noSekarang;
+
+                if (noSaya) {
+                    const baki = noSaya - noSekarang;
+                    const pesan = document.getElementById('pesan-status');
+                    if (baki > 0) {
+                        pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
+                        pesan.style.color = "orange";
+                    } else if (baki === 0) {
+                        pesan.innerText = "GILIRAN ANDA! Sila masuk.";
+                        pesan.style.color = "green";
+                    } else {
+                        pesan.innerText = "Giliran anda telah selesai.";
+                        pesan.style.color = "grey";
+                    }
+                }
+            });
+        }
+
+        setInterval(kemaskiniStatus, 3000); // Automatik setiap 3 saat
+        kemaskiniStatus(); // Jalankan sekali masa mula buka
+    </script>
+</body>
+</html>

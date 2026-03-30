@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daftar Klinik</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="text-align:center; font-family:sans-serif; padding-top:50px;">
+    <h1>Daftar Giliran</h1>
+    <input type="text" id="nama" placeholder="Nama Anda" style="padding:10px; width:250px;"><br><br>
+    <button onclick="hantar()" id="btn" style="padding:10px 20px; background:blue; color:white; border:none;">Ambil Nombor</button>
+
+    <div id="hasil" style="display:none; margin-top:30px; border:2px solid blue; padding:20px;">
+        <h2>Nombor Anda: <span id="no-anda"></span></h2>
+        <p>Nama: <span id="nama-anda"></span></p>
+        <a href="/status_page">Semak Status Live</a>
+    </div>
+
+    <script>
+        function hantar() {
+            let namaVal = document.getElementById('nama').value;
+            if(!namaVal) return alert("Masukkan nama!");
+
+            document.getElementById('btn').disabled = true;
+
+            fetch('/api/daftar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({nama: namaVal})
+            })
+            .then(res => res.json())
+            .then(data => {
+                localStorage.setItem('no_saya', data.no_giliran);
+                document.getElementById('hasil').style.display = 'block';
+                document.getElementById('no-anda').innerText = data.no_giliran;
+                document.getElementById('nama-anda').innerText = data.nama;
+            });
+        }
+    </script>
+</body>
+</html>
