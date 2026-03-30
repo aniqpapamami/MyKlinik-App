@@ -1,11 +1,20 @@
 from flask import Flask, render_template, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
+import os
+import json
 
 app = Flask(__name__)
 
-# Setup Firebase Admin SDK
-cred = credentials.Certificate("serviceAccountKey.json")
+# SETUP FIREBASE MENGGUNAKAN ENVIRONMENT VARIABLE
+if os.environ.get('FIREBASE_CONFIG_JSON'):
+    # Ambil data dari Environment Variable di Render
+    key_dict = json.loads(os.environ.get('FIREBASE_CONFIG_JSON'))
+    cred = credentials.Certificate(key_dict)
+else:
+    # Backup jika jalan di komputer sendiri
+    cred = credentials.Certificate("serviceAccountKey.json")
+	
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app'
 })
