@@ -6,18 +6,41 @@ import json
 
 app = Flask(__name__)
 
-# SETUP FIREBASE MENGGUNAKAN ENVIRONMENT VARIABLE
-if os.environ.get('FIREBASE_CONFIG_JSON'):
-    # Ambil data dari Environment Variable di Render
-    key_dict = json.loads(os.environ.get('FIREBASE_CONFIG_JSON'))
-    cred = credentials.Certificate(key_dict)
-else:
-    # Backup jika jalan di komputer sendiri
-    cred = credentials.Certificate("serviceAccountKey.json")
-	
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app'
-})
+# GANTIKAN 'KOD_RAHSIA_DATABASE' dengan kod yang anda salin di Langkah 1
+# GANTIKAN URL dengan URL database anda yang betul
+if not firebase_admin._apps:
+    cred = credentials.InternalServiceAccountCredentials() # Ini sekadar placeholder
+    firebase_admin.initialize_app(None, {
+        'databaseURL': 'https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app',
+        'databaseAuthVariableOverride': None
+    })
+
+# Fungsi alternatif untuk akses database menggunakan Secret
+def get_db_ref(path):
+    # GANTIKAN Teks di bawah dengan Secret dari Firebase Langkah 1
+    SECRET = gR5AQrjY7m8ZXbTUO1ZXFR2PJ0GPlcSWrWCvshJF 
+    return db.reference(path, url='https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app' + SECRET)
+
+# --- UBAH FUNGSI API ANDA ---
+
+@app.route('/api/daftar', methods=['POST'])
+def daftar_pesakit():
+    nama = request.json.get('nama')
+    ref_jumlah = get_db_ref('jumlah_giliran') # Guna fungsi baru
+    no_baru = (ref_jumlah.get() or 0) + 1
+    ref_jumlah.set(no_baru)
+    
+    get_db_ref(f'senarai_pesakit/{no_baru}').set({
+        'nama': nama,
+        'no_giliran': no_baru,
+        'status': 'menunggu'
+    })
+    return jsonify({'no_giliran': no_baru, 'nama': nama})
+
+@app.route('/api/status_live')
+def status_live():
+    no_sekarang = get_db_ref('nombor_sekarang').get() or 0 # Guna fungsi baru
+    return jsonify({'nombor_sekarang': no_sekarang})
 
 @app.route('/')
 def home():
