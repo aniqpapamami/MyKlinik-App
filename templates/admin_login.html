@@ -1,0 +1,39 @@
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Admin - MyKlinik</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body { background: #2c3e50; height: 100vh; display: flex; align-items: center; }
+        .login-card { border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card login-card p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold">Admin MyKlinik</h3>
+                        <p class="text-muted">Sila log masuk untuk ke dashboard</p>
+                    </div>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">LOG MASUK</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <a href="/" class="small text-decoration-none text-muted">← Kembali ke Laman Utama</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

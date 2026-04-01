@@ -1,0 +1,136 @@
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambil Giliran - MyKlinik</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        body { background-color: #f4f7f9; font-family: 'Segoe UI', sans-serif; }
+        .top-nav { background: white; padding: 15px; border-bottom: 1px solid #ddd; }
+        .main-card { border: none; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .no-live { font-size: 80px; font-weight: 800; color: #d93025; line-height: 1; }
+        .status-box { background: #e8f0fe; border-radius: 15px; padding: 20px; border-left: 5px solid #1a73e8; }
+        .btn-register { padding: 12px; font-weight: bold; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="top-nav mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="text-decoration-none fw-bold text-dark"><i class="fas fa-arrow-left me-2"></i> Kembali</a>
+        <span class="badge bg-success">Sistem Online</span>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            
+            <!-- BAHAGIAN 1: BORANG DAFTAR (Akan hilang lepas daftar) -->
+            <div id="section-daftar" class="card main-card p-4 mb-4">
+                <h4 class="fw-bold mb-3 text-center">Daftar Giliran</h4>
+                <p class="text-muted text-center small">Masukkan nama anda untuk mendapatkan nombor giliran digital.</p>
+                <hr>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary text-uppercase">Nama Penuh</label>
+                    <input type="text" id="nama" class="form-control form-control-lg" placeholder="Contoh: Ali bin Abu">
+                </div>
+                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary btn-register w-100">
+                    <i class="fas fa-paper-plane me-2"></i>Ambil Nombor Sekarang
+                </button>
+            </div>
+
+            <!-- BAHAGIAN 2: STATUS LIVE (Sentiasa ada) -->
+            <div class="card main-card p-4 text-center">
+                <h6 class="text-uppercase text-secondary opacity-75 fw-bold">Nombor Sekarang</h6>
+                <div id="no-live" class="no-live my-3">--</div>
+                <p class="small text-muted">Dikemaskini secara automatik</p>
+
+                <!-- Info Nombor Saya (Hanya muncul lepas daftar) -->
+                <div id="info-saya" style="display:none;" class="status-box mt-3 text-start">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-primary fw-bold text-uppercase">Nombor Anda</span>
+                        <span id="nama-anda" class="badge bg-primary">--</span>
+                    </div>
+                    <div id="no-saya" class="display-5 fw-bold text-dark mt-1">--</div>
+                    <div id="pesan-status" class="mt-2 fw-bold small text-primary">Menunggu giliran...</div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 text-muted small">
+                <p><i class="fas fa-info-circle me-1"></i> Sila ke kaunter jika nombor anda dipanggil.</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Cek kalau pesakit dah pernah daftar (guna Memori Telefon)
+    const savedNo = localStorage.getItem('no_saya');
+    const savedNama = localStorage.getItem('nama_saya');
+
+    if (savedNo) {
+        tampilStatus(savedNo, savedNama);
+    }
+
+    function hantarDaftar() {
+        const namaVal = document.getElementById('nama').value.trim();
+        if (!namaVal) return alert("Sila masukkan nama anda.");
+
+        document.getElementById('btn-submit').disabled = true;
+        document.getElementById('btn-submit').innerText = "Memproses...";
+
+        fetch('/api/daftar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({nama: namaVal})
+        })
+        .then(res => res.json())
+        .then(data => {
+            localStorage.setItem('no_saya', data.no_giliran);
+            localStorage.setItem('nama_saya', data.nama);
+            tampilStatus(data.no_giliran, data.nama);
+        });
+    }
+
+    function tampilStatus(no, nama) {
+        document.getElementById('section-daftar').style.display = 'none';
+        document.getElementById('info-saya').style.display = 'block';
+        document.getElementById('no-saya').innerText = no;
+        document.getElementById('nama-anda').innerText = nama;
+    }
+
+    // 2. Fungsi Pantau Nombor LIVE dari Python API
+    function kemaskiniLive() {
+        fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
+            const noSekarang = data.nombor_sekarang;
+            document.getElementById('no-live').innerText = noSekarang;
+
+            const noSaya = localStorage.getItem('no_saya');
+            if (noSaya) {
+                const baki = noSaya - noSekarang;
+                const pesan = document.getElementById('pesan-status');
+                if (baki > 0) {
+                    pesan.innerText = "Sila tunggu. Ada " + baki + " orang lagi.";
+                    pesan.className = "mt-2 fw-bold small text-warning";
+                } else if (baki === 0) {
+                    pesan.innerText = "GILIRAN ANDA! Sila masuk sekarang.";
+                    pesan.className = "mt-2 fw-bold small text-success";
+                } else {
+                    pesan.innerText = "Selesai. Harap anda berpuas hati.";
+                    pesan.className = "mt-2 fw-bold small text-secondary";
+                }
+            }
+        });
+    }
+
+    setInterval(kemaskiniLive, 3000);
+    kemaskiniLive();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang - MyKlinik</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        .hero { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://unsplash.com'); background-size: cover; height: 400px; color: white; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 0 0 50px 50px; }
+        .promo-card { border: none; border-radius: 20px; transition: 0.3s; }
+        .promo-card:hover { transform: translateY(-10px); }
+        .btn-register { padding: 15px 40px; font-size: 20px; border-radius: 50px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="hero shadow-lg">
+    <div>
+        <h1 class="display-3 fw-bold">MyKlinik Digital</h1>
+        <p class="lead">Kesihatan Anda, Keutamaan Kami. Kini Lebih Mudah & Pantas.</p>
+        <a href="/daftar" class="btn btn-primary btn-register shadow-lg"><i class="fas fa-id-card me-2"></i>Ambil No Giliran</a>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row text-center mb-5">
+        <div class="col-md-4">
+            <i class="fas fa-clock fa-3x text-primary mb-3"></i>
+            <h5>Waktu Operasi</h5>
+            <p class="text-muted">Isnin - Jumaat: 8am - 10pm<br>Sabtu - Ahad: 9am - 5pm</p>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-map-marker-alt fa-3x text-danger mb-3"></i>
+            <h5>Lokasi Kami</h5>
+            <p class="text-muted">No 123, Jalan Sihat,<br>Bandar Baru, 43000 Selangor</p>
+        </div>
+        <div class="col-md-4">
+            <i class="fas fa-phone-alt fa-3x text-success mb-3"></i>
+            <h5>Hubungi Kami</h5>
+            <p class="text-muted">03-1234 5678<br>info@myklinik.com</p>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-4">Promosi & Info Kesihatan</h3>
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card promo-card shadow-sm">
+                <img src="https://unsplash.com" class="card-img-top" style="border-radius: 20px 20px 0 0;">
+                <div class="card-body">
+                    <h5 class="fw-bold">Pakej Vaksin Flu</h5>
+                    <p class="small text-muted">Lindungi keluarga anda dari selesema musim perayaan. Hanya RM70 seorang!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card promo-card shadow-sm">
+                <img src="https://unsplash.com" class="card-img-top" style="border-radius: 20px 20px 0 0;">
+                <div class="card-body">
+                    <h5 class="fw-bold">Check-up Kesihatan</h5>
+                    <p class="small text-muted">Pakej penuh pemeriksaan darah & tekanan jantung untuk warga emas.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="p-4 bg-light rounded-4 border">
+                <h6>Doktor Bertugas Hari Ini</h6>
+                <hr>
+                <p><strong>Dr. Ahmad Bakri</strong> (Pakar Kanak-kanak)</p>
+                <p><strong>Dr. Sarah Lee</strong> (Pakar Am)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-dark text-white text-center py-4 mt-5">
+    <p class="mb-0">© 2024 MyKlinik Management System | <a href="/admin/login" class="text-secondary text-decoration-none">Admin Login</a></p>
+</footer>
+
+</body>
+</html>
