@@ -1,60 +1,73 @@
 import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = "klinik_rahsia_123" # Untuk sistem login
 
-# URL Database anda - PASTIKAN URL INI BETUL
-# Nota: Wajib ada /.json di hujung URL untuk cara ini berfungsi
-BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app"
+BASE_URL = "https://firebasedatabase.app"
+
+# --- ROUTES AWAM ---
 
 @app.route('/')
 def index():
+    # Halaman Utama: Info & Promosi
+    return render_template('index.html')
+
+@app.route('/daftar')
+def daftar():
+    # Gabungan Ambil No & Status Live
     return render_template('daftar.html')
 
-@app.route('/status_page')
-def status_page():
-    return render_template('status.html')
+# --- ROUTES ADMIN & LOGIN ---
 
-@app.route('/admin_page')
-def admin_page():
-    return render_template('admin.html')
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # Login mudah: Boleh tukar ikut kesesuaian
+        if username == "admin" and password == "klinik123":
+            session['admin_logged_in'] = True
+            return redirect(url_for('dashboard'))
+    return render_template('admin_login.html')
 
-# API: DAFTAR PESAKIT
+@app.route('/admin/dashboard')
+def dashboard():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    return render_template('dashboard.html')
+
+# --- API UNTUK DATA & GRAF ---
+
 @app.route('/api/daftar', methods=['POST'])
-def daftar_pesakit():
+def api_daftar():
     nama = request.json.get('nama')
+    today = datetime.now().strftime('%Y-%m-%d')
     
-    # 1. Ambil jumlah giliran terkini
+    # Ambil no baru
     res = requests.get(f"{BASE_URL}/jumlah_giliran.json")
-    jumlah_sekarang = res.json() or 0
-    no_baru = jumlah_sekarang + 1
-    
-    # 2. Simpan nombor baru & data pesakit
+    no_baru = (res.json() or 0) + 1
     requests.put(f"{BASE_URL}/jumlah_giliran.json", json=no_baru)
-    requests.put(f"{BASE_URL}/senarai_pesakit/{no_baru}.json", json={
-        'nama': nama,
-        'no_giliran': no_baru,
-        'status': 'menunggu'
-    })
+    
+    # Rekodkan pendaftaran harian untuk GRAF
+    res_stats = requests.get(f"{BASE_URL}/stats/{today}.json")
+    count_today = (res_stats.json() or 0) + 1
+    requests.put(f"{BASE_URL}/stats/{today}.json", json=count_today)
     
     return jsonify({'no_giliran': no_baru, 'nama': nama})
 
-# API: PANGGIL SETERUSNYA (ADMIN)
-@app.route('/api/next', methods=['POST'])
-def panggil_next():
-    res = requests.get(f"{BASE_URL}/nombor_sekarang.json")
-    no_sekarang = res.json() or 0
-    no_baru = no_sekarang + 1
-    
-    requests.put(f"{BASE_URL}/nombor_sekarang.json", json=no_baru)
-    return jsonify({'nombor_sekarang': no_baru})
+@app.route('/api/stats_mingguan')
+def stats_mingguan():
+    # Ambil data 7 hari terakhir (Simulasi data untuk Graf)
+    res = requests.get(f"{BASE_URL}/stats.json")
+    stats_data = res.json() or {}
+    return jsonify(stats_data)
 
-# API: AMBIL STATUS LIVE
-@app.route('/api/status_live')
-def status_live():
-    res = requests.get(f"{BASE_URL}/nombor_sekarang.json")
-    no_sekarang = res.json() or 0
-    return jsonify({'nombor_sekarang': no_sekarang})
+@app.route('/admin/logout')
+def logout():
+    session.pop('admin_logged_in', None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)
