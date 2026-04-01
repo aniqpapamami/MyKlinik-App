@@ -3,30 +3,33 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "klinik_rahsia_123" # Untuk sistem login
+app.secret_key = "klinik_rahsia_123"
 
+# URL Database anda
 BASE_URL = "https://firebasedatabase.app"
 
-# --- ROUTES AWAM ---
+# Fungsi helper untuk dapatkan tarikh hari ini
+def get_today():
+    return datetime.now().strftime('%Y-%m-%d')
 
 @app.route('/')
 def index():
-    # Halaman Utama: Info & Promosi
     return render_template('index.html')
 
 @app.route('/daftar')
 def daftar():
-    # Gabungan Ambil No & Status Live
     return render_template('daftar.html')
 
-# --- ROUTES ADMIN & LOGIN ---
+@app.route('/status_page')
+def status_page():
+    return render_template('daftar.html') # Kita gabungkan dalam daftar.html
 
+# --- ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        # Login mudah: Boleh tukar ikut kesesuaian
         if username == "admin" and password == "klinik123":
             session['admin_logged_in'] = True
             return redirect(url_for('dashboard'))
@@ -38,36 +41,66 @@ def dashboard():
         return redirect(url_for('admin_login'))
     return render_template('dashboard.html')
 
-# --- API UNTUK DATA & GRAF ---
-
-@app.route('/api/daftar', methods=['POST'])
-def api_daftar():
-    nama = request.json.get('nama')
-    today = datetime.now().strftime('%Y-%m-%d')
-    
-    # Ambil no baru
-    res = requests.get(f"{BASE_URL}/jumlah_giliran.json")
-    no_baru = (res.json() or 0) + 1
-    requests.put(f"{BASE_URL}/jumlah_giliran.json", json=no_baru)
-    
-    # Rekodkan pendaftaran harian untuk GRAF
-    res_stats = requests.get(f"{BASE_URL}/stats/{today}.json")
-    count_today = (res_stats.json() or 0) + 1
-    requests.put(f"{BASE_URL}/stats/{today}.json", json=count_today)
-    
-    return jsonify({'no_giliran': no_baru, 'nama': nama})
-
-@app.route('/api/stats_mingguan')
-def stats_mingguan():
-    # Ambil data 7 hari terakhir (Simulasi data untuk Graf)
-    res = requests.get(f"{BASE_URL}/stats.json")
-    stats_data = res.json() or {}
-    return jsonify(stats_data)
-
 @app.route('/admin/logout')
 def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
+
+# --- API UNTUK DATA (DATABASE) ---
+
+@app.route('/api/daftar', methods=['POST'])
+def api_daftar():
+    nama = request.json.get('nama')
+    today = get_today()
+    
+    # 1. Ambil & Naikkan jumlah giliran HARIAN
+    res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    jumlah_sekarang = res.json() or 0
+    no_baru = jumlah_sekarang + 1
+    
+    # 2. Simpan data ke folder tarikh hari ini
+    requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
+    requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
+        'nama': nama,
+        'no_giliran': no_baru,
+        'status': 'menunggu',
+        'masa': datetime.now().strftime('%H:%M:%S')
+    })
+    
+    return jsonify({'no_giliran': no_baru, 'nama': nama})
+
+@app.route('/api/next', methods=['POST'])
+def panggil_next():
+    today = get_today()
+    res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    no_sekarang = res.json() or 0
+    no_baru = no_sekarang + 1
+    
+    requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    return jsonify({'nombor_sekarang': no_baru})
+
+@app.route('/api/status_live')
+def status_live():
+    today = get_today()
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    
+    return jsonify({
+        'nombor_sekarang': res_now.json() or 0,
+        'jumlah_giliran': res_total.json() or 0
+    })
+
+@app.route('/api/stats_mingguan')
+def stats_mingguan():
+    # Mengambil data dari folder 'harian' untuk bina graf
+    res = requests.get(f"{BASE_URL}/harian.json")
+    data_harian = res.json() or {}
+    
+    # Format data untuk Chart.js
+    labels = list(data_harian.keys())[-7:] # Ambil 7 hari terakhir
+    counts = [data_harian[day].get('jumlah_giliran', 0) for day in labels]
+    
+    return jsonify({'labels': labels, 'counts': counts})
 
 if __name__ == '__main__':
     app.run(debug=True)

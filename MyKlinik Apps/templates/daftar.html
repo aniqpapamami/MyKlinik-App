@@ -19,7 +19,7 @@
 <div class="top-nav mb-4">
     <div class="container d-flex justify-content-between align-items-center">
         <a href="/" class="text-decoration-none fw-bold text-dark"><i class="fas fa-arrow-left me-2"></i> Kembali</a>
-        <span class="badge bg-success">Sistem Online</span>
+        <span class="badge bg-success">Sistem Aktif: <span id="display-date"></span></span>
     </div>
 </div>
 
@@ -27,39 +27,39 @@
     <div class="row justify-content-center">
         <div class="col-md-5">
             
-            <!-- BAHAGIAN 1: BORANG DAFTAR (Akan hilang lepas daftar) -->
+            <!-- BAHAGIAN 1: BORANG DAFTAR -->
             <div id="section-daftar" class="card main-card p-4 mb-4">
-                <h4 class="fw-bold mb-3 text-center">Daftar Giliran</h4>
-                <p class="text-muted text-center small">Masukkan nama anda untuk mendapatkan nombor giliran digital.</p>
+                <h4 class="fw-bold mb-3 text-center text-primary">Pendaftaran Giliran</h4>
+                <p class="text-muted text-center small">Sila masukkan nama untuk giliran hari ini.</p>
                 <hr>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold text-secondary text-uppercase">Nama Penuh</label>
-                    <input type="text" id="nama" class="form-control form-control-lg" placeholder="Contoh: Ali bin Abu">
+                    <label class="form-label small fw-bold text-secondary">NAMA PENUH</label>
+                    <input type="text" id="nama" class="form-control form-control-lg shadow-sm" placeholder="Contoh: Ali bin Abu">
                 </div>
-                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary btn-register w-100">
-                    <i class="fas fa-paper-plane me-2"></i>Ambil Nombor Sekarang
+                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary btn-register w-100 shadow">
+                    <i class="fas fa-paper-plane me-2"></i>Daftar Sekarang
                 </button>
             </div>
 
-            <!-- BAHAGIAN 2: STATUS LIVE (Sentiasa ada) -->
+            <!-- BAHAGIAN 2: STATUS LIVE -->
             <div class="card main-card p-4 text-center">
-                <h6 class="text-uppercase text-secondary opacity-75 fw-bold">Nombor Sekarang</h6>
-                <div id="no-live" class="no-live my-3">--</div>
-                <p class="small text-muted">Dikemaskini secara automatik</p>
+                <h6 class="text-uppercase text-secondary opacity-75 fw-bold small">Nombor Sedang Dipanggil</h6>
+                <div id="no-live" class="no-live my-3">0</div>
+                <p class="small text-muted">Auto-update setiap 3 saat</p>
 
-                <!-- Info Nombor Saya (Hanya muncul lepas daftar) -->
-                <div id="info-saya" style="display:none;" class="status-box mt-3 text-start">
+                <!-- Info Nombor Saya -->
+                <div id="info-saya" style="display:none;" class="status-box mt-3 text-start shadow-sm">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="small text-primary fw-bold text-uppercase">Nombor Anda</span>
-                        <span id="nama-anda" class="badge bg-primary">--</span>
+                        <span id="nama-anda" class="badge bg-primary px-3">--</span>
                     </div>
-                    <div id="no-saya" class="display-5 fw-bold text-dark mt-1">--</div>
-                    <div id="pesan-status" class="mt-2 fw-bold small text-primary">Menunggu giliran...</div>
+                    <div id="no-saya" class="display-4 fw-bold text-dark mt-1">--</div>
+                    <div id="pesan-status" class="mt-2 fw-bold small">Menunggu...</div>
                 </div>
             </div>
 
             <div class="text-center mt-4 text-muted small">
-                <p><i class="fas fa-info-circle me-1"></i> Sila ke kaunter jika nombor anda dipanggil.</p>
+                <p><i class="fas fa-clock me-1"></i> Waktu Operasi: 8:00 AM - 10:00 PM</p>
             </div>
 
         </div>
@@ -67,12 +67,19 @@
 </div>
 
 <script>
-    // 1. Cek kalau pesakit dah pernah daftar (guna Memori Telefon)
-    const savedNo = localStorage.getItem('no_saya');
-    const savedNama = localStorage.getItem('nama_saya');
+    // Set tarikh hari ini di header
+    const todayStr = new Date().toISOString().split('T')[0];
+    document.getElementById('display-date').innerText = todayStr;
 
-    if (savedNo) {
-        tampilStatus(savedNo, savedNama);
+    // Cek memori telefon untuk tarikh hari ini sahaja
+    const savedDate = localStorage.getItem('last_reg_date');
+    if (savedDate === todayStr) {
+        const savedNo = localStorage.getItem('no_saya');
+        const savedNama = localStorage.getItem('nama_saya');
+        if (savedNo) tampilStatus(savedNo, savedNama);
+    } else {
+        // Jika hari dah bertukar, kosongkan memori lama
+        localStorage.clear();
     }
 
     function hantarDaftar() {
@@ -80,7 +87,7 @@
         if (!namaVal) return alert("Sila masukkan nama anda.");
 
         document.getElementById('btn-submit').disabled = true;
-        document.getElementById('btn-submit').innerText = "Memproses...";
+        document.getElementById('btn-submit').innerText = "Sedang Mendaftar...";
 
         fetch('/api/daftar', {
             method: 'POST',
@@ -91,7 +98,12 @@
         .then(data => {
             localStorage.setItem('no_saya', data.no_giliran);
             localStorage.setItem('nama_saya', data.nama);
+            localStorage.setItem('last_reg_date', todayStr); // Simpan tarikh daftar
             tampilStatus(data.no_giliran, data.nama);
+        })
+        .catch(err => {
+            alert("Gagal menyambung ke server.");
+            document.getElementById('btn-submit').disabled = false;
         });
     }
 
@@ -102,7 +114,6 @@
         document.getElementById('nama-anda').innerText = nama;
     }
 
-    // 2. Fungsi Pantau Nombor LIVE dari Python API
     function kemaskiniLive() {
         fetch('/api/status_live')
         .then(res => res.json())
@@ -114,15 +125,17 @@
             if (noSaya) {
                 const baki = noSaya - noSekarang;
                 const pesan = document.getElementById('pesan-status');
+                
                 if (baki > 0) {
-                    pesan.innerText = "Sila tunggu. Ada " + baki + " orang lagi.";
-                    pesan.className = "mt-2 fw-bold small text-warning";
+                    pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
+                    pesan.style.color = "#856404"; // Kuning/Coklat
                 } else if (baki === 0) {
-                    pesan.innerText = "GILIRAN ANDA! Sila masuk sekarang.";
-                    pesan.className = "mt-2 fw-bold small text-success";
+                    pesan.innerText = "GILIRAN ANDA! Sila ke kaunter.";
+                    pesan.style.color = "#198754"; // Hijau
+                    // Anda boleh tambah bunyi alert di sini jika mahu
                 } else {
-                    pesan.innerText = "Selesai. Harap anda berpuas hati.";
-                    pesan.className = "mt-2 fw-bold small text-secondary";
+                    pesan.innerText = "Giliran anda telah selesai.";
+                    pesan.style.color = "#6c757d"; // Kelabu
                 }
             }
         });
