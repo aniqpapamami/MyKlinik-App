@@ -1,89 +1,81 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard MyKlinik</title>
+    <title>Dashboard Admin</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
-    <script src="https://jsdelivr.net"></script>
-    <style>
-        body { background: #f8f9fa; }
-        .stat-card { border: none; border-radius: 15px; transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .btn-panggil { height: 120px; font-size: 28px; font-weight: bold; border-radius: 20px; }
-    </style>
 </head>
-<body>
-
-<nav class="navbar navbar-dark bg-dark mb-4">
-    <div class="container">
-        <span class="navbar-brand mb-0 h1">MyKlinik Admin Dashboard</span>
-        <a href="/admin/logout" class="btn btn-outline-light btn-sm">Log Keluar</a>
-    </div>
-</nav>
-
-<div class="container">
-    <div class="row g-4 mb-5">
-        <!-- Kotak Statistik -->
+<body class="bg-light">
+<div class="container-fluid p-4">
+    <div class="row">
         <div class="col-md-4">
-            <div class="card stat-card p-4 text-center bg-white shadow-sm">
-                <h6 class="text-uppercase text-muted small">Pesakit Hari Ini</h6>
-                <h1 id="total-today" class="display-3 fw-bold text-primary">0</h1>
+            <div class="card p-4 shadow-sm border-0 text-center mb-4">
+                <h6>NOMBOR SEKARANG</h6>
+                <h1 id="now-serving" class="display-1 fw-bold text-primary">0</h1>
+                <button onclick="panggilNext()" class="btn btn-success btn-lg fw-bold w-100 py-3 mt-3">PANGGIL NEXT</button>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card stat-card p-4 text-center bg-white shadow-sm">
-                <h6 class="text-uppercase text-muted small">Nombor Sekarang</h6>
-                <h1 id="now-serving" class="display-3 fw-bold text-success">0</h1>
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm border-0">
+                <h5 class="fw-bold mb-4">Senarai Pendaftaran Hari Ini</h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No</th>
+                                <th>Nama & HP</th>
+                                <th>Status</th>
+                                <th>Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <button onclick="panggilNext()" class="btn btn-success w-100 btn-panggil shadow">
-                PANGGIL NEXT
-            </button>
-        </div>
-    </div>
-
-    <!-- Graf Mingguan -->
-    <div class="card stat-card p-4 bg-white shadow-sm mb-5">
-        <h5 class="fw-bold mb-4">Laporan Pendaftaran Mingguan</h5>
-        <canvas id="grafMingguan" height="100"></canvas>
     </div>
 </div>
 
 <script>
-    function updateStats() {
+    function panggilNext() {
+        fetch('/api/next', { method: 'POST' }).then(() => loadData());
+    }
+
+    function updateStatus(no, statusBaru) {
+        fetch('/api/update_status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({no_giliran: no, status: statusBaru})
+        }).then(() => loadData());
+    }
+
+    function loadData() {
+        // Ambil Nombor Sekarang
         fetch('/api/status_live').then(res => res.json()).then(data => {
             document.getElementById('now-serving').innerText = data.nombor_sekarang;
-            document.getElementById('total-today').innerText = data.jumlah_giliran;
         });
-    }
 
-    function panggilNext() {
-        fetch('/api/next', { method: 'POST' }).then(() => updateStats());
-    }
-
-    // Fungsi bina graf dari data Firebase
-    function loadGraf() {
-        fetch('/api/stats_mingguan').then(res => res.json()).then(data => {
-            new Chart(document.getElementById('grafMingguan'), {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Jumlah Pesakit',
-                        data: data.counts,
-                        borderColor: '#0d6efd',
-                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                }
+        // Ambil Senarai Pesakit
+        fetch('/api/get_senarai_hari_ini').then(res => res.json()).then(data => {
+            let html = '';
+            // Susun dari nombor paling besar ke kecil
+            Object.values(data).sort((a,b) => b.no_giliran - a.no_giliran).forEach(p => {
+                let badgeClass = p.status === 'menunggu' ? 'bg-warning' : (p.status === 'selesai' ? 'bg-success' : 'bg-danger');
+                html += `<tr>
+                    <td class="fw-bold">${p.no_giliran}</td>
+                    <td>${p.nama}<br><small class="text-muted">${p.no_hp}</small></td>
+                    <td><span class="badge ${badgeClass}">${p.status.toUpperCase()}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-success" onclick="updateStatus(${p.no_giliran}, 'selesai')">Selesai</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="updateStatus(${p.no_giliran}, 'tidak_hadir')">X Hadir</button>
+                    </td>
+                </tr>`;
             });
+            document.getElementById('table-body').innerHTML = html;
         });
     }
 
-    setInterval(updateStats, 3000);
-    updateStats();
-    loadGraf();
+    setInterval(loadData, 4000);
+    loadData();
 </script>
 </body>
 </html>

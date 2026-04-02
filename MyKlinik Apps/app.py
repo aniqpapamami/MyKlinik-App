@@ -8,7 +8,6 @@ app.secret_key = "klinik_rahsia_123"
 # URL Database anda
 BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
-# Fungsi helper untuk dapatkan tarikh hari ini
 def get_today():
     return datetime.now().strftime('%Y-%m-%d')
 
@@ -20,17 +19,10 @@ def index():
 def daftar():
     return render_template('daftar.html')
 
-@app.route('/status_page')
-def status_page():
-    return render_template('daftar.html') # Kita gabungkan dalam daftar.html
-
-# --- ADMIN ROUTES ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if username == "admin" and password == "klinik123":
+        if request.form.get('username') == "admin" and request.form.get('password') == "klinik123":
             session['admin_logged_in'] = True
             return redirect(url_for('dashboard'))
     return render_template('admin_login.html')
@@ -46,61 +38,62 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
-# --- API UNTUK DATA (DATABASE) ---
+# --- API BARU & DIKEMASKINI ---
 
 @app.route('/api/daftar', methods=['POST'])
 def api_daftar():
-    nama = request.json.get('nama')
+    data = request.json
+    nama = data.get('nama')
+    no_hp = data.get('no_hp') # Tambah No HP
     today = get_today()
     
-    # 1. Ambil & Naikkan jumlah giliran HARIAN
     res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-    jumlah_sekarang = res.json() or 0
-    no_baru = jumlah_sekarang + 1
+    no_baru = (res.json() or 0) + 1
     
-    # 2. Simpan data ke folder tarikh hari ini
     requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
     requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
         'nama': nama,
+        'no_hp': no_hp,
         'no_giliran': no_baru,
         'status': 'menunggu',
         'masa': datetime.now().strftime('%H:%M:%S')
     })
-    
     return jsonify({'no_giliran': no_baru, 'nama': nama})
-
-@app.route('/api/next', methods=['POST'])
-def panggil_next():
-    today = get_today()
-    res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-    no_sekarang = res.json() or 0
-    no_baru = no_sekarang + 1
-    
-    requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
-    return jsonify({'nombor_sekarang': no_baru})
 
 @app.route('/api/status_live')
 def status_live():
     today = get_today()
     res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
     res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-    
     return jsonify({
         'nombor_sekarang': res_now.json() or 0,
         'jumlah_giliran': res_total.json() or 0
     })
 
-@app.route('/api/stats_mingguan')
-def stats_mingguan():
-    # Mengambil data dari folder 'harian' untuk bina graf
-    res = requests.get(f"{BASE_URL}/harian.json")
-    data_harian = res.json() or {}
-    
-    # Format data untuk Chart.js
-    labels = list(data_harian.keys())[-7:] # Ambil 7 hari terakhir
-    counts = [data_harian[day].get('jumlah_giliran', 0) for day in labels]
-    
-    return jsonify({'labels': labels, 'counts': counts})
+@app.route('/api/get_senarai_hari_ini')
+def get_senarai():
+    today = get_today()
+    res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
+    return jsonify(res.json() or {})
+
+@app.route('/api/update_status', methods=['POST'])
+def update_status():
+    data = request.json
+    no = data.get('no_giliran')
+    status_baru = data.get('status')
+    today = get_today()
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", json={'status': status_baru})
+    return jsonify({'success': True})
+
+@app.route('/api/next', methods=['POST'])
+def panggil_next():
+    today = get_today()
+    res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    no_baru = (res.json() or 0) + 1
+    requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    # Automatik set status pesakit tersebut kepada 'sedang_dirawat'
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
+    return jsonify({'nombor_sekarang': no_baru})
 
 if __name__ == '__main__':
     app.run(debug=True)
