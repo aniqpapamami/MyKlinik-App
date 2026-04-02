@@ -3,72 +3,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Giliran | MyKlinik</title>
-    <!-- Bootstrap & FontAwesome -->
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background: #f0f2f5; font-family: 'Inter', sans-serif; }
-        .clinic-header { background: #0d6efd; color: white; padding: 30px 20px; border-radius: 0 0 40px 40px; box-shadow: 0 4px 12px rgba(13,110,253,0.2); }
-        .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: -30px; }
-        .no-live { font-size: 100px; font-weight: 900; color: #dc3545; line-height: 1; }
-        .status-box { background: #e7f1ff; border-radius: 15px; border-left: 5px solid #0d6efd; padding: 20px; }
-        .btn-register { padding: 15px; font-weight: bold; border-radius: 12px; font-size: 18px; }
-        .audio-btn { font-size: 12px; border-radius: 20px; background: #fff; color: #0d6efd; border: 1px solid #0d6efd; padding: 5px 15px; margin-top: 10px; }
-        .audio-active { background: #198754; color: white; border: none; }
+        body { background: #f8f9fa; font-family: 'Inter', sans-serif; padding-bottom: 50px; }
+        .clinic-header { background: #0d6efd; color: white; padding: 40px 20px 60px; border-radius: 0 0 40px 40px; position: relative; }
+        .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-top: -40px; position: relative; z-index: 10; }
+        .no-live { font-size: 90px; font-weight: 800; color: #dc3545; margin: 15px 0; line-height: 1; }
+        .status-box { background: #f0f7ff; border-radius: 15px; padding: 20px; border: 1px solid #cfe2ff; margin-top: 25px; }
+        .btn-home { position: absolute; top: 20px; left: 20px; color: white; text-decoration: none; font-size: 14px; opacity: 0.8; }
+        .btn-home:hover { opacity: 1; color: white; }
+        .audio-btn { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-radius: 50px; padding: 8px 20px; }
     </style>
 </head>
 <body>
 
 <div class="clinic-header text-center">
-    <h3 class="fw-bold"><i class="fas fa-clinic-medical me-2"></i>MYKLINIK</h3>
+    <a href="/" class="btn-home"><i class="fas fa-chevron-left"></i> Home</a>
+    <h3 class="fw-bold mb-1">MYKLINIK</h3>
     <p class="small opacity-75 mb-0">Sistem Giliran Digital Real-Time</p>
 </div>
 
-<div class="container pb-5">
+<div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-5">
+        <div class="col-md-5 col-lg-4">
             
-            <!-- Bahagian 1: Borang Daftar -->
+            <!-- SEKSYEN DAFTAR -->
             <div id="section-daftar" class="card main-card p-4 mb-4">
-                <h5 class="fw-bold mb-3 text-center">Daftar Giliran</h5>
+                <h5 class="fw-bold text-center mb-4">Ambil Giliran</h5>
                 <div class="mb-3">
-                    <label class="small fw-bold text-secondary">NAMA PENUH</label>
-                    <input type="text" id="nama" class="form-control form-control-lg shadow-sm" placeholder="Contoh: Ahmad Ali">
+                    <label class="small fw-bold text-muted">NAMA PENUH</label>
+                    <input type="text" id="nama" class="form-control form-control-lg border-0 bg-light" placeholder="Ahmad Ali">
                 </div>
                 <div class="mb-3">
-                    <label class="small fw-bold text-secondary">NO. TELEFON (HP)</label>
-                    <input type="number" id="no_hp" class="form-control form-control-lg shadow-sm" placeholder="Contoh: 0123456789">
+                    <label class="small fw-bold text-muted">NO. TELEFON</label>
+                    <input type="number" id="no_hp" class="form-control form-control-lg border-0 bg-light" placeholder="0123456789">
                 </div>
-                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary btn-register w-100 shadow">
-                    <i class="fas fa-paper-plane me-2"></i>AMBIL NOMBOR
+                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary w-100 fw-bold py-3 shadow">
+                    DAFTAR SEKARANG
                 </button>
             </div>
 
-            <!-- Bahagian 2: Status Live -->
+            <!-- SEKSYEN STATUS -->
             <div class="card main-card p-4 text-center">
-                <span class="badge bg-danger rounded-pill mb-2 px-3 py-2" style="width: fit-content; margin: 0 auto;">LIVE</span>
-                <h6 class="text-secondary small fw-bold text-uppercase">Nombor Sekarang</h6>
-                <div id="no-live" class="no-live my-3">0</div>
+                <div class="d-flex justify-content-center mb-2">
+                    <span class="badge bg-danger rounded-pill px-3 py-2">LIVE</span>
+                </div>
+                <p class="text-secondary small fw-bold mb-0">NOMBOR SEKARANG</p>
+                <div id="no-live" class="no-live">0</div>
                 
-                <!-- Butang Aktifkan Suara -->
-                <button id="btn-suara" onclick="aktifkanSuara()" class="btn audio-btn">
-                    <i class="fas fa-volume-up me-1"></i> Aktifkan Suara Notifikasi
+                <button id="btn-suara" onclick="aktifkanSuara()" class="btn btn-outline-primary audio-btn">
+                    <i class="fas fa-volume-up me-1"></i> Aktifkan Suara
                 </button>
 
-                <!-- Info Nombor Saya -->
-                <div id="info-saya" style="display:none;" class="status-box mt-4 text-start shadow-sm">
+                <!-- INFO PESAKIT -->
+                <div id="info-saya" style="display:none;" class="status-box text-start">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small text-primary fw-bold">NOMBOR ANDA</span>
-                        <span id="nama-anda" class="badge bg-primary px-3">--</span>
+                        <span class="small text-primary fw-bold">NO ANDA</span>
+                        <span id="nama-anda" class="badge bg-primary">--</span>
                     </div>
-                    <div id="no-saya" class="display-3 fw-bold text-dark">--</div>
+                    <div id="no-saya" class="display-4 fw-bold text-dark">--</div>
                     <div id="pesan-status" class="fw-bold small mt-2">Menunggu...</div>
                 </div>
             </div>
 
-            <div class="text-center mt-4">
-                <p class="text-muted small"><i class="fas fa-info-circle me-1"></i> Nombor akan dikemaskini secara automatik.</p>
-            </div>
+            <p class="text-center text-muted mt-4 small">Sila pantau nombor anda secara berkala.</p>
 
         </div>
     </div>
@@ -78,17 +77,15 @@
     let suaraAktif = false;
     window.spoken = false;
 
-    // Fungsi Aktifkan Suara (Wajib Klik untuk kebenaran Browser)
     function aktifkanSuara() {
         suaraAktif = true;
         let btn = document.getElementById('btn-suara');
-        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Suara Aktif';
-        btn.classList.add('audio-active');
+        btn.innerHTML = '<i class="fas fa-check"></i> Suara Aktif';
+        btn.className = 'btn btn-success audio-btn text-white';
         
-        // Test suara pendek
-        let testMsg = new SpeechSynthesisUtterance("Sistem sedia");
-        testMsg.lang = 'ms-MY';
-        window.speechSynthesis.speak(testMsg);
+        let test = new SpeechSynthesisUtterance("Sistem Aktif");
+        test.lang = 'ms-MY';
+        window.speechSynthesis.speak(test);
     }
 
     // Cek memori telefon
@@ -99,11 +96,10 @@
     function hantarDaftar() {
         const nama = document.getElementById('nama').value.trim();
         const hp = document.getElementById('no_hp').value.trim();
-
-        if (!nama || !hp) return alert("Sila isi nama dan nombor telefon.");
+        if (!nama || !hp) return alert("Sila lengkapkan maklumat.");
 
         document.getElementById('btn-submit').disabled = true;
-        document.getElementById('btn-submit').innerText = "Mendaftarkan...";
+        document.getElementById('btn-submit').innerText = "...";
 
         fetch('/api/daftar', {
             method: 'POST',
@@ -124,11 +120,15 @@
     }
 
     function kemaskiniLive() {
-        fetch('/api/status_live')
-        .then(res => res.json())
-        .then(data => {
+        fetch('/api/status_live').then(res => res.json()).then(data => {
             const noSekarang = data.nombor_sekarang;
             document.getElementById('no-live').innerText = noSekarang;
+
+            // Logik Reset: Jika database kosong (0), buang memori telefon
+            if(noSekarang === 0 && data.jumlah_giliran === 0) {
+                localStorage.clear();
+                window.location.reload();
+            }
 
             const noSaya = localStorage.getItem('no_saya');
             if (noSaya) {
@@ -136,33 +136,27 @@
                 const pesan = document.getElementById('pesan-status');
                 
                 if (baki > 0) {
-                    pesan.innerText = "Sila tunggu. Ada " + baki + " orang lagi.";
-                    pesan.style.color = "#856404";
-                    window.spoken = false; // Reset suara supaya boleh panggil bila tiba giliran
-                } 
-                else if (baki === 0) {
-                    pesan.innerText = "GILIRAN ANDA! Sila masuk sekarang.";
-                    pesan.style.color = "#198754";
-                    
-                    // FUNGSI SUARA PANGGILAN
+                    pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
+                    pesan.className = "fw-bold small mt-2 text-warning";
+                    window.spoken = false;
+                } else if (baki === 0) {
+                    pesan.innerText = "GILIRAN ANDA! Sila masuk.";
+                    pesan.className = "fw-bold small mt-2 text-success";
                     if (suaraAktif && !window.spoken) {
-                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk ke bilik rawatan.");
+                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk.");
                         msg.lang = 'ms-MY';
-                        msg.pitch = 1;
-                        msg.rate = 1;
                         window.speechSynthesis.speak(msg);
-                        window.spoken = true; // Elak suara ulang beribu kali
+                        window.spoken = true;
                     }
-                } 
-                else {
+                } else {
                     pesan.innerText = "Giliran anda telah tamat.";
-                    pesan.style.color = "#6c757d";
+                    pesan.className = "fw-bold small mt-2 text-secondary";
                 }
             }
         });
     }
 
-    setInterval(kemaskiniLive, 3000);
+    setInterval(kemaskiniLive, 4000);
     kemaskiniLive();
 </script>
 
