@@ -42,6 +42,10 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
+@app.route('/monitor')
+def monitor():
+    return render_template('monitor.html')
+	
 # --- API ---
 
 @app.route('/api/daftar', methods=['POST'])
