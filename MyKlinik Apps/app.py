@@ -9,7 +9,7 @@ app.secret_key = "klinik_rahsia_123"
 BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 @app.route('/')
-def index(): return render_template('daftar.html')
+def index(): return render_template('index.html')
 
 @app.route('/admin/dashboard')
 def dashboard():
