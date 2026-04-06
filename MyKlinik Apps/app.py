@@ -67,7 +67,7 @@ def api_daftar():
 
 @app.route('/api/status_live')
 def status_live():
-    today = get_today()
+    today = datetime.now().strftime('%Y-%m-%d')
     res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
     res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
     return jsonify({
@@ -85,9 +85,20 @@ def panggil_next():
 
 @app.route('/api/get_senarai_hari_ini')
 def get_senarai():
-    today = get_today()
+    today = datetime.now().strftime('%Y-%m-%d')
+    # Mengambil data dari folder tarikh hari ini
     res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
     return jsonify(res.json() or {})
+
+@app.route('/api/update_status', methods=['POST'])
+def update_status():
+    data = request.json
+    no = data.get('no_giliran')
+    stat = data.get('status')
+    today = datetime.now().strftime('%Y-%m-%d')
+    # Kemaskini status pesakit dalam folder tarikh hari ini
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", json={'status': stat})
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(debug=True)

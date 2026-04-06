@@ -42,7 +42,10 @@
     </div>
 </div>
 <script>
-    function panggilNext() { fetch('/api/next', { method: 'POST' }).then(() => loadData()); }
+    function panggilNext() {
+        fetch('/api/next', { method: 'POST' }).then(() => loadData());
+    }
+
     function updateStatus(no, stat) {
         fetch('/api/update_status', {
             method: 'POST',
@@ -50,31 +53,43 @@
             body: JSON.stringify({no_giliran: no, status: stat})
         }).then(() => loadData());
     }
+
     function loadData() {
+        // 1. Kemaskini Nombor Sekarang & Jumlah Daftar
         fetch('/api/status_live').then(res => res.json()).then(data => {
             document.getElementById('now-serving').innerText = data.nombor_sekarang;
             document.getElementById('total-today').innerText = data.jumlah_giliran;
         });
+
+        // 2. Muat Senarai Pesakit dari Firebase
         fetch('/api/get_senarai_hari_ini').then(res => res.json()).then(data => {
             let html = '';
-            let sorted = Object.values(data).sort((a,b) => b.no_giliran - a.no_giliran);
-            sorted.forEach(p => {
-                let color = p.status == 'menunggu' ? 'warning' : (p.status == 'sedang_dirawat' ? 'primary' : 'success');
-                if(p.status == 'tidak_hadir') color = 'danger';
-                html += `<tr>
-                    <td class="fw-bold h4">#${p.no_giliran}</td>
-                    <td><div class="fw-bold">${p.nama}</div><div class="small text-secondary">${p.no_hp}</div></td>
-                    <td><span class="badge bg-${color}">${p.status.toUpperCase()}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-success" onclick="updateStatus(${p.no_giliran}, 'selesai')"><i class="fas fa-check"></i></button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="updateStatus(${p.no_giliran}, 'tidak_hadir')"><i class="fas fa-times"></i></button>
-                    </td>
-                </tr>`;
-            });
-            document.getElementById('table-body').innerHTML = html || '<tr><td colspan="4" class="text-center">Tiada data</td></tr>';
+            if (data) {
+                // Susun nombor giliran (terbaru di atas)
+                let sorted = Object.values(data).sort((a,b) => b.no_giliran - a.no_giliran);
+                
+                sorted.forEach(p => {
+                    let color = p.status == 'menunggu' ? 'warning' : (p.status == 'sedang_dirawat' ? 'primary' : 'success');
+                    if(p.status == 'tidak_hadir') color = 'danger';
+                    
+                    html += `<tr>
+                        <td class="fw-bold h4">#${p.no_giliran}</td>
+                        <td><div class="fw-bold">${p.nama}</div><div class="small text-secondary">${p.no_hp}</div></td>
+                        <td><span class="badge bg-${color}">${p.status.toUpperCase()}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="updateStatus(${p.no_giliran}, 'selesai')"><i class="fas fa-check"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="updateStatus(${p.no_giliran}, 'tidak_hadir')"><i class="fas fa-times"></i></button>
+                        </td>
+                    </tr>`;
+                });
+            } else {
+                html = '<tr><td colspan="4" class="text-center py-4 text-secondary">Tiada pendaftaran hari ini</td></tr>';
+            }
+            document.getElementById('table-body').innerHTML = html;
         });
     }
-    setInterval(loadData, 4000);
+
+    setInterval(loadData, 4000); // Automatik muat semula setiap 4 saat
     loadData();
 </script>
 </body>

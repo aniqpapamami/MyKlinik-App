@@ -71,11 +71,11 @@
     // 1. Fungsi Aktifkan Suara (Browser perlukan interaksi manusia)
     function enableAudio() {
         audioReady = true;
-        document.getElementById('audioBtn').classList.replace('btn-outline-secondary', 'btn-success');
-        document.getElementById('audioBtn').innerText = "Suara Aktif";
-        document.getElementById('audioBtn').style.opacity = "1";
+        let btn = document.getElementById('audioBtn');
+        btn.innerText = "Suara Aktif";
+        btn.className = "btn btn-success btn-sm mt-4";
         
-        let msg = new SpeechSynthesisUtterance("Sistem pendaftaran aktif");
+        let msg = new SpeechSynthesisUtterance("Sistem monitor aktif");
         msg.lang = 'ms-MY';
         window.speechSynthesis.speak(msg);
     }
@@ -86,18 +86,18 @@
         .then(res => res.json())
         .then(data => {
             const noSekarang = data.nombor_sekarang;
-            const el = document.getElementById('displayNo');
+            const displayElement = document.getElementById('displayNo');
             
-            el.innerText = noSekarang;
+            displayElement.innerText = noSekarang;
 
+            // Jika nombor berubah dan Admin panggil nombor baru
             if (noSekarang !== lastNo) {
-                // Jangan panggil suara kalau nombor 0 (awal pagi) atau pendaftaran pertama (-1)
                 if (lastNo !== -1 && noSekarang !== 0 && noSekarang > lastNo) {
                     panggilNombor(noSekarang);
                     
-                    // Efek visual Flash
-                    el.classList.add('flash');
-                    setTimeout(() => el.classList.remove('flash'), 3000);
+                    // Efek visual Kilat (Flash) pada monitor
+                    displayElement.classList.add('flash');
+                    setTimeout(() => displayElement.classList.remove('flash'), 5000);
                 }
                 lastNo = noSekarang;
             }
