@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Giliran | MyKlinik</title>
+    <!-- Guna link Bootstrap yang lebih stabil -->
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
+        body { background: #f8f9fa; font-family: sans-serif; padding-bottom: 50px; }
         .clinic-header { background: #0d6efd; color: white; padding: 50px 20px 70px; border-radius: 0 0 40px 40px; position: relative; }
-        .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); margin-top: -50px; position: relative; z-index: 10; }
+        .main-card { border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-top: -50px; position: relative; z-index: 10; }
         .no-live { font-size: 100px; font-weight: 800; color: #dc3545; margin: 15px 0; line-height: 1; }
         .status-box { background: #f0f7ff; border-radius: 15px; padding: 20px; border: 1px solid #cfe2ff; margin-top: 25px; }
-        .btn-home { position: absolute; top: 20px; left: 20px; color: white; text-decoration: none; font-size: 14px; opacity: 0.8; font-weight: 600; }
+        .btn-home { position: absolute; top: 20px; left: 20px; color: white; text-decoration: none; font-size: 14px; font-weight: 600; }
+        /* Pastikan input sentiasa nampak luas di telefon */
+        .form-control-lg { border: 2px solid #eee !important; margin-bottom: 15px; }
+        .form-control-lg:focus { border-color: #0d6efd !important; box-shadow: none; }
     </style>
 </head>
 <body>
+
 <div class="clinic-header text-center">
     <a href="/" class="btn-home"><i class="fas fa-chevron-left me-1"></i> HOME</a>
     <h3 class="fw-bold mb-1">MYKLINIK</h3>
@@ -24,30 +29,50 @@
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-5">
+        <div class="col-md-6 col-lg-5">
+            
+            <!-- SEKSYEN BORANG PENDAFTARAN -->
             <div id="section-daftar" class="card main-card p-4 mb-4">
-                <h5 class="fw-bold text-center mb-4">Ambil Giliran</h5>
-                <input type="text" id="nama" class="form-control form-control-lg mb-3" placeholder="Nama Penuh">
-                <input type="number" id="no_hp" class="form-control form-control-lg mb-3" placeholder="No Telefon">
-                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary w-100 fw-bold py-3 shadow">DAFTAR SEKARANG</button>
+                <h5 class="fw-bold text-center mb-4">Ambil Giliran Baru</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-secondary small">NAMA PENUH</label>
+                    <input type="text" id="nama" class="form-control form-control-lg" placeholder="Masukkan nama anda">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-secondary small">NO. TELEFON (HP)</label>
+                    <input type="number" id="no_hp" class="form-control form-control-lg" placeholder="Contoh: 0123456789">
+                </div>
+                
+                <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary w-100 fw-bold py-3 shadow-sm">
+                    DAFTAR SEKARANG
+                </button>
             </div>
 
+            <!-- SEKSYEN STATUS LIVE -->
             <div class="card main-card p-4 text-center">
-                <p class="text-secondary small fw-bold mb-0">NOMBOR SEKARANG</p>
+                <div class="d-flex justify-content-center mb-2">
+                    <span class="badge bg-danger rounded-pill px-3 py-2 fw-bold" style="font-size: 10px;">LIVE STATUS</span>
+                </div>
+                <p class="text-secondary small fw-bold mb-0 opacity-75">NOMBOR SEKARANG</p>
                 <div id="no-live" class="no-live">0</div>
-                <button id="btn-suara" onclick="aktifkanSuara()" class="btn btn-outline-primary btn-sm rounded-pill px-4">
+                
+                <button id="btn-suara" onclick="aktifkanSuara()" class="btn btn-outline-primary rounded-pill px-4 btn-sm">
                     <i class="fas fa-volume-up me-1"></i> Aktifkan Suara Panggilan
                 </button>
 
+                <!-- INFO PESAKIT (MUNCUL LEPAS DAFTAR) -->
                 <div id="info-saya" style="display:none;" class="status-box text-start">
-                    <div class="d-flex justify-content-between">
-                        <span class="small text-primary fw-bold">NO ANDA</span>
-                        <span id="nama-anda" class="badge bg-primary">--</span>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-primary fw-bold">NO. ANDA</span>
+                        <span id="nama-anda" class="badge bg-primary px-3">--</span>
                     </div>
                     <div id="no-saya" class="display-3 fw-bold text-dark">--</div>
                     <div id="pesan-status" class="fw-bold small mt-2">Menunggu...</div>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
@@ -60,7 +85,8 @@
         suaraAktif = true;
         let btn = document.getElementById('btn-suara');
         btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Suara Aktif';
-        btn.className = 'btn btn-success btn-sm rounded-pill px-4 text-white fw-bold';
+        btn.className = 'btn btn-success rounded-pill px-4 btn-sm text-white fw-bold';
+        
         let test = new SpeechSynthesisUtterance("Sistem sedia");
         test.lang = 'ms-MY';
         window.speechSynthesis.speak(test);
@@ -73,17 +99,25 @@
     function hantarDaftar() {
         const nama = document.getElementById('nama').value.trim();
         const hp = document.getElementById('no_hp').value.trim();
-        if (!nama || !hp) return alert("Sila isi maklumat.");
+        if (!nama || !hp) return alert("Sila isi nama dan nombor telefon.");
 
         document.getElementById('btn-submit').disabled = true;
+        document.getElementById('btn-submit').innerText = "MENDAFTARKAN...";
+
         fetch('/api/daftar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({nama: nama, no_hp: hp})
-        }).then(res => res.json()).then(data => {
+        })
+        .then(res => res.json())
+        .then(data => {
             localStorage.setItem('no_saya', data.no_giliran);
             localStorage.setItem('nama_saya', data.nama);
             tampilStatus(data.no_giliran, data.nama);
+        })
+        .catch(err => {
+            alert("Ralat sambungan. Sila cuba lagi.");
+            document.getElementById('btn-submit').disabled = false;
         });
     }
 
@@ -95,12 +129,14 @@
     }
 
     function kemaskiniLive() {
-        fetch('/api/status_live').then(res => res.json()).then(data => {
+        fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
             const noSekarang = data.nombor_sekarang;
             const totalDaftar = data.jumlah_giliran;
             document.getElementById('no-live').innerText = noSekarang;
 
-            // RESET PINTAR
+            // RESET LOGIK
             if(noSekarang === 0 && totalDaftar === 0) {
                 if(localStorage.getItem('no_saya')) {
                     localStorage.clear();
@@ -114,6 +150,7 @@
             if (noSaya) {
                 const baki = noSaya - noSekarang;
                 const pesan = document.getElementById('pesan-status');
+                
                 if (baki > 0) {
                     pesan.innerText = "Lagi " + baki + " orang.";
                     pesan.className = "fw-bold small mt-2 text-warning";
@@ -121,20 +158,24 @@
                 } else if (baki === 0) {
                     pesan.innerText = "GILIRAN ANDA! Sila masuk.";
                     pesan.className = "fw-bold small mt-2 text-success";
+                    
                     if (suaraAktif && !window.spoken) {
-                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk ke bilik rawatan.");
+                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk.");
                         msg.lang = 'ms-MY';
                         window.speechSynthesis.speak(msg);
                         window.spoken = true;
                     }
                 } else {
-                    pesan.innerText = "Giliran telah selesai.";
+                    pesan.innerText = "Giliran telah tamat.";
                     pesan.className = "fw-bold small mt-2 text-secondary";
                 }
             }
         });
     }
+
     setInterval(kemaskiniLive, 4000);
+    kemaskiniLive();
 </script>
+
 </body>
 </html>
