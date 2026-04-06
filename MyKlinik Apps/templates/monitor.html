@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paparan Monitor MyKlinik</title>
+    <!-- Pautan CSS yang betul -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        body { background: #000; color: white; overflow: hidden; font-family: 'Inter', sans-serif; height: 100vh; margin: 0; }
+        
+        /* Bahagian Kiri: Iklan (70%) */
+        .ads-section { background: #111; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 8px solid #0d6efd; padding: 40px; }
+        
+        .promo-box { width: 90%; padding: 60px; border-radius: 40px; background: rgba(13, 110, 253, 0.05); border: 3px solid #0d6efd; text-align: center; transition: all 1s ease-in-out; }
+        
+        /* Bahagian Kanan: Nombor (30%) */
+        .queue-section { height: 100vh; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .current-label { font-size: 2.5rem; font-weight: 800; color: #0d6efd; letter-spacing: 8px; margin-bottom: 20px; }
+        .main-number { font-size: 20rem; font-weight: 900; line-height: 0.8; color: #fff; text-shadow: 0 0 80px rgba(13, 110, 253, 0.6); transition: 0.5s; }
+        
+        /* Footer Running Text */
+        .footer-news { position: absolute; bottom: 0; width: 100%; background: #0d6efd; color: white; padding: 15px 0; font-size: 2rem; font-weight: bold; overflow: hidden; }
+        .marquee-content { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+        /* Animasi Flash bila nombor berubah */
+        .flash { animation: flash-animation 1s 3; }
+        @keyframes flash-animation { 0%, 100% { color: white; } 50% { color: #ff0000; transform: scale(1.1); } }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid m-0 p-0">
+    <div class="row g-0">
+        <!-- BAHAGIAN IKLAN (70%) -->
+        <div class="col-8 ads-section">
+            <div id="adContainer" class="promo-box">
+                <h1 class="display-1 fw-bold text-white mb-4" id="adTitle">MEMPROSES...</h1>
+                <p class="display-5 text-secondary" id="adDesc">Sila tunggu sebentar sementara maklumat dimuatkan.</p>
+            </div>
+            <div class="mt-5 text-center">
+                <h2 class="text-primary fw-bold"><i class="fas fa-clock me-3"></i> 8:00 AM - 10:00 PM</h2>
+            </div>
+        </div>
+
+        <!-- BAHAGIAN NOMBOR (30%) -->
+        <div class="col-4 queue-section">
+            <div class="current-label">NOMBOR SEMASA</div>
+            <div id="displayNo" class="main-number">0</div>
+            <div class="mt-5">
+                <div class="badge bg-danger p-4 fs-1 shadow-lg">SILA MASUK KE BILIK 1</div>
+            </div>
+            <!-- Butang Aktifkan Suara (Hanya tekan sekali masa mula-mula buka TV) -->
+            <button onclick="enableAudio()" id="audioBtn" class="btn btn-sm btn-outline-secondary mt-4 opacity-25">Aktifkan Suara</button>
+        </div>
+    </div>
+</div>
+
+<div class="footer-news">
+    <div class="marquee-content">
+        Selamat Datang ke MyKlinik Digital &nbsp; | &nbsp; Dr. Ahmad Bakri (Pakar Kanak-kanak) Bertugas Hari Ini &nbsp; | &nbsp; Pastikan anda memakai pelitup muka jika bergejala &nbsp; | &nbsp; Kebersihan anda tanggungjawab bersama.
+    </div>
+</div>
+
+<script>
+    let lastNo = -1; 
+    let audioReady = false;
+
+    // 1. Fungsi Aktifkan Suara (Browser perlukan interaksi manusia)
+    function enableAudio() {
+        audioReady = true;
+        document.getElementById('audioBtn').classList.replace('btn-outline-secondary', 'btn-success');
+        document.getElementById('audioBtn').innerText = "Suara Aktif";
+        document.getElementById('audioBtn').style.opacity = "1";
+        
+        let msg = new SpeechSynthesisUtterance("Sistem pendaftaran aktif");
+        msg.lang = 'ms-MY';
+        window.speechSynthesis.speak(msg);
+    }
+
+    // 2. Semak Nombor Secara Berkala
+    function checkQueue() {
+        fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
+            const noSekarang = data.nombor_sekarang;
+            const el = document.getElementById('displayNo');
+            
+            el.innerText = noSekarang;
+
+            if (noSekarang !== lastNo) {
+                // Jangan panggil suara kalau nombor 0 (awal pagi) atau pendaftaran pertama (-1)
+                if (lastNo !== -1 && noSekarang !== 0 && noSekarang > lastNo) {
+                    panggilNombor(noSekarang);
+                    
+                    // Efek visual Flash
+                    el.classList.add('flash');
+                    setTimeout(() => el.classList.remove('flash'), 3000);
+                }
+                lastNo = noSekarang;
+            }
+        });
+    }
+
+    function panggilNombor(no) {
+        if (!audioReady) return;
+        
+        let ucapan = new SpeechSynthesisUtterance("Nombor giliran, " + no + ", sila masuk ke bilik satu.");
+        ucapan.lang = 'ms-MY';
+        ucapan.rate = 0.8; 
+        window.speechSynthesis.speak(ucapan);
+    }
+
+    // 3. Sistem Iklan Rotasi
+    const ads = [
+        { title: "VAKSIN FLU RM70", desc: "Lindungi keluarga anda hari ini. Sila hubungi kaunter." },
+        { title: "KAD KESIHATAN", desc: "Kami menerima pelbagai jenis insurans & panel terpilih." },
+        { title: "CHECK-UP PROMOSI", desc: "Pakej pemeriksaan darah warga emas hanya RM150." },
+        { title: "CUCI TANGAN", desc: "Pastikan kebersihan tangan sebelum masuk ke bilik rawatan." }
+    ];
+    let adIndex = 0;
+
+    function rotateAds() {
+        const container = document.getElementById('adContainer');
+        container.style.opacity = 0; // Efek fade out
+        
+        setTimeout(() => {
+            adIndex = (adIndex + 1) % ads.length;
+            document.getElementById('adTitle').innerText = ads[adIndex].title;
+            document.getElementById('adDesc').innerText = ads[adIndex].desc;
+            container.style.opacity = 1; // Efek fade in
+        }, 500);
+    }
+
+    // Jalankan sistem
+    setInterval(checkQueue, 3000);
+    setInterval(rotateAds, 10000);
+    rotateAds(); // Jalankan iklan pertama
+</script>
+
+</body>
+</html>

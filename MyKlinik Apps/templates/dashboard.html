@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
@@ -10,55 +11,38 @@
         .no-box { font-size: 100px; color: #0d6efd; font-weight: 800; line-height: 1; }
         .table { color: #e9ecef; }
         .btn-call { height: 80px; font-size: 20px; font-weight: bold; border-radius: 12px; }
-        .badge-status { padding: 8px 12px; border-radius: 8px; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 <div class="container py-4">
     <div class="row g-4">
-        <!-- Kotak Kawalan Left -->
         <div class="col-md-4">
             <div class="card p-4 text-center shadow-lg">
                 <p class="text-secondary small fw-bold mb-0">SEDANG DIPANGGIL</p>
                 <div id="now-serving" class="no-box my-3">0</div>
-                <button onclick="panggilNext()" class="btn btn-primary btn-call w-100 shadow mb-3">
-                    <i class="fas fa-bullhorn me-2"></i>PANGGIL NEXT
-                </button>
-                <div class="d-flex justify-content-between text-secondary small">
-                    <span>Jumlah Daftar: <b id="total-today" class="text-white">0</b></span>
-                </div>
+                <button onclick="panggilNext()" class="btn btn-primary btn-call w-100 shadow mb-3">PANGGIL NEXT</button>
+                <p class="small text-secondary">Jumlah Daftar: <b id="total-today" class="text-white">0</b></p>
             </div>
         </div>
-
-        <!-- Senarai Pesakit Right -->
         <div class="col-md-8">
             <div class="card p-4 shadow-lg">
-                <h5 class="fw-bold mb-4"><i class="fas fa-list-ul me-2 text-primary"></i>Senarai Giliran Hari Ini</h5>
+                <h5 class="fw-bold mb-4">Senarai Giliran Hari Ini</h5>
                 <div class="table-responsive">
                     <table class="table table-dark table-hover align-middle">
                         <thead>
                             <tr class="text-secondary small">
-                                <th>NO</th>
-                                <th>PESAKIT</th>
-                                <th>STATUS</th>
-                                <th>TINDAKAN</th>
+                                <th>NO</th><th>PESAKIT</th><th>STATUS</th><th>TINDAKAN</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body">
-                            <!-- Data akan dimuatkan di sini -->
-                        </tbody>
+                        <tbody id="table-body"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 <script>
-    function panggilNext() {
-        fetch('/api/next', { method: 'POST' }).then(() => loadData());
-    }
-
+    function panggilNext() { fetch('/api/next', { method: 'POST' }).then(() => loadData()); }
     function updateStatus(no, stat) {
         fetch('/api/update_status', {
             method: 'POST',
@@ -66,34 +50,31 @@
             body: JSON.stringify({no_giliran: no, status: stat})
         }).then(() => loadData());
     }
-
     function loadData() {
         fetch('/api/status_live').then(res => res.json()).then(data => {
             document.getElementById('now-serving').innerText = data.nombor_sekarang;
             document.getElementById('total-today').innerText = data.jumlah_giliran;
         });
-
         fetch('/api/get_senarai_hari_ini').then(res => res.json()).then(data => {
             let html = '';
             let sorted = Object.values(data).sort((a,b) => b.no_giliran - a.no_giliran);
             sorted.forEach(p => {
                 let color = p.status == 'menunggu' ? 'warning' : (p.status == 'sedang_dirawat' ? 'primary' : 'success');
                 if(p.status == 'tidak_hadir') color = 'danger';
-                
                 html += `<tr>
                     <td class="fw-bold h4">#${p.no_giliran}</td>
                     <td><div class="fw-bold">${p.nama}</div><div class="small text-secondary">${p.no_hp}</div></td>
-                    <td><span class="badge bg-${color} badge-status">${p.status}</span></td>
+                    <td><span class="badge bg-${color}">${p.status.toUpperCase()}</span></td>
                     <td>
-                        <button class="btn btn-sm btn-outline-success me-1" onclick="updateStatus(${p.no_giliran}, 'selesai')"><i class="fas fa-check"></i></button>
+                        <button class="btn btn-sm btn-outline-success" onclick="updateStatus(${p.no_giliran}, 'selesai')"><i class="fas fa-check"></i></button>
                         <button class="btn btn-sm btn-outline-danger" onclick="updateStatus(${p.no_giliran}, 'tidak_hadir')"><i class="fas fa-times"></i></button>
                     </td>
                 </tr>`;
             });
-            document.getElementById('table-body').innerHTML = html || '<tr><td colspan="4" class="text-center py-4">Tiada pendaftaran hari ini</td></tr>';
+            document.getElementById('table-body').innerHTML = html || '<tr><td colspan="4" class="text-center">Tiada data</td></tr>';
         });
     }
-    setInterval(loadData, 3000);
+    setInterval(loadData, 4000);
     loadData();
 </script>
 </body>
