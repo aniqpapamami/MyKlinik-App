@@ -26,9 +26,7 @@ def monitor():
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        user = request.form.get('username')
-        pw = request.form.get('password')
-        if user == "admin" and pw == "klinik123":
+        if request.form.get('username') == "admin" and request.form.get('password') == "klinik123":
             session['admin_logged_in'] = True
             return redirect(url_for('dashboard'))
     return render_template('admin_login.html')
@@ -44,7 +42,7 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
-# --- API (MENGGUNAKAN STRUKTUR TARIKH HARIAN) ---
+# --- API ---
 
 @app.route('/api/daftar', methods=['POST'])
 def api_daftar():
@@ -79,15 +77,8 @@ def panggil_next():
     res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
     no_baru = (res.json() or 0) + 1
     requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
-    # Automatik set status pesakit tersebut kepada 'sedang_dirawat'
     requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
     return jsonify({'nombor_sekarang': no_baru})
-
-@app.route('/api/get_senarai_hari_ini')
-def get_senarai():
-    today = get_today()
-    res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
-    return jsonify(res.json() or {})
 
 @app.route('/api/update_status', methods=['POST'])
 def update_status():
@@ -97,6 +88,12 @@ def update_status():
     today = get_today()
     requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", json={'status': stat})
     return jsonify({'success': True})
+
+@app.route('/api/get_senarai_hari_ini')
+def get_senarai():
+    today = get_today()
+    res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
+    return jsonify(res.json() or {})
 
 if __name__ == '__main__':
     app.run(debug=True)

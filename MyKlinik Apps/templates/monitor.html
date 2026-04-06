@@ -3,138 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor MyKlinik | Paparan Giliran</title>
-    <!-- Bootstrap & FontAwesome -->
+    <title>Monitor | MyKlinik</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background: #000; color: white; overflow: hidden; font-family: 'Inter', sans-serif; height: 100vh; margin: 0; }
-        
-        /* Bahagian Kiri: Iklan (70%) */
-        .ads-section { background: #111; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 8px solid #0d6efd; padding: 40px; }
-        
-        #adContainer { width: 90%; padding: 60px; border-radius: 40px; background: rgba(13, 110, 253, 0.05); border: 3px solid #0d6efd; text-align: center; transition: opacity 0.8s ease-in-out; }
-        
-        /* Bahagian Kanan: Nombor (30%) */
-        .queue-section { height: 100vh; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .current-label { font-size: 2.5rem; font-weight: 800; color: #0d6efd; letter-spacing: 8px; margin-bottom: 20px; }
-        .main-number { font-size: 18rem; font-weight: 900; line-height: 0.8; color: #fff; text-shadow: 0 0 80px rgba(13, 110, 253, 0.6); }
-        
-        /* Footer Marquee */
-        .footer-news { position: absolute; bottom: 0; width: 100%; background: #0d6efd; color: white; padding: 15px 0; font-size: 2.2rem; font-weight: bold; overflow: hidden; }
-        .marquee-content { display: inline-block; white-space: nowrap; animation: marquee 30s linear infinite; }
+        body { background: #000; color: #fff; overflow: hidden; height: 100vh; font-family: 'Inter', sans-serif; }
+        .ads-section { height: 100vh; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 8px solid #0d6efd; padding: 40px; }
+        #adContainer { width: 100%; padding: 40px; border-radius: 30px; background: rgba(13, 110, 253, 0.05); border: 2px solid #0d6efd; text-align: center; transition: opacity 0.8s; }
+        .queue-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .main-number { font-size: 15rem; font-weight: 900; color: #fff; text-shadow: 0 0 50px rgba(13,110,253,0.6); }
+        .flash { animation: flash-anim 1s 3; }
+        @keyframes flash-anim { 50% { color: #ff0000; transform: scale(1.1); } }
+        .footer-news { position: absolute; bottom: 70px; width: 100%; background: #0d6efd; padding: 15px; font-size: 1.8rem; overflow: hidden; }
+        .marquee { white-space: nowrap; animation: marquee 30s linear infinite; display: inline-block; }
         @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-
-        /* Animasi Flash */
-        .flash { animation: flash-animation 1s 3; }
-        @keyframes flash-animation { 0%, 100% { color: white; } 50% { color: #ff0000; transform: scale(1.1); } }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 11px; }
+        .nav-item i { font-size: 22px; display: block; }
+        .nav-item.active { color: #0d6efd; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid m-0 p-0">
+<div class="container-fluid p-0">
     <div class="row g-0">
-        <!-- BAHAGIAN IKLAN (70%) -->
         <div class="col-8 ads-section">
             <div id="adContainer">
-                <h1 class="display-1 fw-bold text-white mb-4" id="adTitle">MyKlinik Digital</h1>
-                <p class="display-5 text-secondary" id="adDesc">Sila tunggu sebentar sementara maklumat dimuatkan.</p>
-            </div>
-            <div class="mt-5 text-center">
-                <h2 class="text-primary fw-bold"><i class="fas fa-clock me-3"></i> 8:00 AM - 10:00 PM</h2>
+                <h1 class="display-2 fw-bold text-white mb-3" id="adTitle">MyKlinik Digital</h1>
+                <p class="h2 text-secondary" id="adDesc">Sila tunggu sebentar...</p>
             </div>
         </div>
-
-        <!-- BAHAGIAN NOMBOR (30%) -->
         <div class="col-4 queue-section">
-            <div class="current-label text-center">NOMBOR<br>SEMASA</div>
+            <h4 class="text-primary fw-bold">NOMBOR SEMASA</h4>
             <div id="displayNo" class="main-number">0</div>
-            <div class="mt-5 text-center">
-                <div class="badge bg-danger p-4 fs-2 shadow-lg mb-3">SILA MASUK KE BILIK 1</div>
-                <br>
-                <button onclick="enableAudio()" id="audioBtn" class="btn btn-outline-light btn-sm opacity-50">Aktifkan Suara</button>
-            </div>
+            <button onclick="enableAudio()" id="audioBtn" class="btn btn-outline-light btn-sm mt-3">Aktifkan Suara</button>
         </div>
     </div>
 </div>
 
 <div class="footer-news">
-    <div class="marquee-content">
-        Selamat Datang ke MyKlinik Digital &nbsp; | &nbsp; Dr. Ahmad Bakri (Pakar Kanak-kanak) Bertugas Hari Ini &nbsp; | &nbsp; Sila bersedia apabila nombor anda hampir tiba &nbsp; | &nbsp; Kebersihan anda tanggungjawab bersama.
-    </div>
+    <div class="marquee">Selamat Datang ke MyKlinik | Dr. Ahmad Bakri Bertugas Hari Ini | Pastikan memakai pelitup muka jika bergejala.</div>
 </div>
 
+<nav class="bottom-nav">
+    <a href="/" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="/daftar" class="nav-item"><i class="fas fa-ticket-alt"></i><span>Ambil No</span></a>
+    <a href="/monitor" class="nav-item active"><i class="fas fa-tv"></i><span>Monitor</span></a>
+</nav>
+
 <script>
-    let lastNo = -1; 
+    let lastNo = -1;
     let audioReady = false;
 
-    // 1. Fungsi Aktifkan Suara
     function enableAudio() {
         audioReady = true;
-        let btn = document.getElementById('audioBtn');
-        btn.innerText = "Suara Aktif";
-        btn.className = "btn btn-success btn-sm mt-2";
-        
-        let msg = new SpeechSynthesisUtterance("Sistem monitor aktif");
-        msg.lang = 'ms-MY';
-        window.speechSynthesis.speak(msg);
+        document.getElementById('audioBtn').className = "btn btn-success btn-sm mt-3";
+        document.getElementById('audioBtn').innerText = "Suara Aktif";
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance("Monitor Sedia"));
     }
 
-    // 2. Semak Nombor Giliran
     function checkQueue() {
-        fetch('/api/status_live')
-        .then(res => res.json())
-        .then(data => {
-            const noSekarang = data.nombor_sekarang;
+        fetch('/api/status_live').then(res => res.json()).then(data => {
+            const no = data.nombor_sekarang;
             const el = document.getElementById('displayNo');
-            
-            el.innerText = noSekarang;
+            el.innerText = no;
 
-            if (noSekarang !== lastNo) {
-                if (lastNo !== -1 && noSekarang !== 0 && noSekarang > lastNo) {
-                    panggilNombor(noSekarang);
+            if (no !== lastNo) {
+                if (lastNo !== -1 && no !== 0) {
+                    if (audioReady) {
+                        let msg = new SpeechSynthesisUtterance("Nombor giliran " + no + ", sila masuk.");
+                        msg.lang = 'ms-MY';
+                        window.speechSynthesis.speak(msg);
+                    }
                     el.classList.add('flash');
-                    setTimeout(() => el.classList.remove('flash'), 5000);
+                    setTimeout(() => el.classList.remove('flash'), 3000);
                 }
-                lastNo = noSekarang;
+                lastNo = no;
             }
         });
     }
 
-    function panggilNombor(no) {
-        if (!audioReady) return;
-        let ucapan = new SpeechSynthesisUtterance("Nombor giliran, " + no + ", sila masuk ke bilik satu.");
-        ucapan.lang = 'ms-MY';
-        ucapan.rate = 0.8; 
-        window.speechSynthesis.speak(ucapan);
-    }
-
-    // 3. SISTEM IKLAN ROTASI (Slide Iklan)
     const ads = [
-        { title: "VAKSIN FLU RM70", desc: "Lindungi keluarga anda hari ini. Sila hubungi kaunter." },
-        { title: "KAD KESIHATAN", desc: "Kami menerima pelbagai jenis insurans & panel terpilih." },
-        { title: "PROMOSI CHECK-UP", desc: "Pakej ujian darah hanya RM150 sahaja!" },
-        { title: "PAKAI PELITUP MUKA", desc: "Sila pakai pelitup muka jika anda bergejala." }
+        { title: "VAKSIN FLU RM70", desc: "Lindungi keluarga anda hari ini." },
+        { title: "KAD KESIHATAN", desc: "Kami menerima panel & insurans terpilih." },
+        { title: "CHECK-UP PROMOSI", desc: "Pakej warga emas hanya RM150." }
     ];
     let adIndex = 0;
-
     function rotateAds() {
         const container = document.getElementById('adContainer');
-        container.style.opacity = 0; // Fade out
-        
+        container.style.opacity = 0;
         setTimeout(() => {
             adIndex = (adIndex + 1) % ads.length;
             document.getElementById('adTitle').innerText = ads[adIndex].title;
             document.getElementById('adDesc').innerText = ads[adIndex].desc;
-            container.style.opacity = 1; // Fade in
+            container.style.opacity = 1;
         }, 800);
     }
 
-    // Jalankan sistem
-    setInterval(checkQueue, 3000); // Semak no setiap 3 saat
-    setInterval(rotateAds, 10000); // Tukar iklan setiap 10 saat
-    rotateAds(); // Jalankan iklan pertama terus
+    setInterval(checkQueue, 4000);
+    setInterval(rotateAds, 10000);
+    rotateAds();
 </script>
-
 </body>
 </html>
