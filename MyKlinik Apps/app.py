@@ -5,13 +5,11 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "klinik_rahsia_123"
 
-# URL Database anda
+# URL DATABASE FIREBASE ANDA
 BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 def get_today():
     return datetime.now().strftime('%Y-%m-%d')
-
-# --- ROUTES ---
 
 @app.route('/')
 def index():
@@ -20,6 +18,10 @@ def index():
 @app.route('/daftar')
 def daftar():
     return render_template('daftar.html')
+
+@app.route('/monitor')
+def monitor():
+    return render_template('monitor.html')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -42,11 +44,7 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
-@app.route('/monitor')
-def monitor():
-    return render_template('monitor.html')
-	
-# --- API ---
+# --- API (MENGGUNAKAN STRUKTUR TARIKH HARIAN) ---
 
 @app.route('/api/daftar', methods=['POST'])
 def api_daftar():
@@ -67,7 +65,7 @@ def api_daftar():
 
 @app.route('/api/status_live')
 def status_live():
-    today = datetime.now().strftime('%Y-%m-%d')
+    today = get_today()
     res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
     res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
     return jsonify({
@@ -81,12 +79,13 @@ def panggil_next():
     res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
     no_baru = (res.json() or 0) + 1
     requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    # Automatik set status pesakit tersebut kepada 'sedang_dirawat'
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
     return jsonify({'nombor_sekarang': no_baru})
 
 @app.route('/api/get_senarai_hari_ini')
 def get_senarai():
-    today = datetime.now().strftime('%Y-%m-%d')
-    # Mengambil data dari folder tarikh hari ini
+    today = get_today()
     res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
     return jsonify(res.json() or {})
 
@@ -95,8 +94,7 @@ def update_status():
     data = request.json
     no = data.get('no_giliran')
     stat = data.get('status')
-    today = datetime.now().strftime('%Y-%m-%d')
-    # Kemaskini status pesakit dalam folder tarikh hari ini
+    today = get_today()
     requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", json={'status': stat})
     return jsonify({'success': True})
 
