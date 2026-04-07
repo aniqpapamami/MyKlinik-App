@@ -102,42 +102,44 @@
     let suaraAktif = false;
     window.spoken = false;
 
-    // Fungsi untuk dapatkan tarikh hari ini (YYYY-MM-DD)
-    function getTarikhHariIni() {
-        return new Date().toLocaleDateString('en-CA');
+    // Fungsi untuk dapatkan tarikh hari ini mengikut zon waktu Malaysia
+    function dapatkanTarikhHariIni() {
+        const sekarang = new Date();
+        // Paksa guna zon masa Asia/Kuala_Lumpur
+        return sekarang.toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
     }
 
-    // 1. AUTO-RESET: Jika hari bertukar, bersihkan localStorage
-    const hariIni = getTarikhHariIni();
+    const hariIni = dapatkanTarikhHariIni();
     const tarikhSimpanan = localStorage.getItem('tarikh_daftar');
-    if (tarikhSimpanan && tarikhSimpanan !== hariIni) {
-        localStorage.clear();
-        console.log("Data hari semalam dipadam.");
+
+    // Jika tarikh yang tersimpan bukan hari ini, reset local storage
+    if (tarikhSimpanan !== hariIni) {
+        localStorage.removeItem('no_saya');
+        localStorage.removeItem('nama_saya');
+        localStorage.setItem('tarikh_daftar', hariIni);
+        console.log("Data lama dipadam. Sedia untuk pendaftaran hari baru.");
     }
 
     function aktifkanSuara() {
         suaraAktif = true;
         let btn = document.getElementById('btn-suara');
         btn.innerText = "Suara Aktif";
-        btn.className = "btn btn-success btn-sm w-100 mt-2"; // Gunakan class Bootstrap jika ada
+        btn.classList.add("btn-success");
         
         let test = new SpeechSynthesisUtterance("Sistem sedia");
         test.lang = 'ms-MY';
         window.speechSynthesis.speak(test);
     }
 
-    // Cek memori telefon untuk paparan status
-    const savedNo = localStorage.getItem('no_saya');
-    const savedNama = localStorage.getItem('nama_saya');
-    if (savedNo) tampilStatus(savedNo, savedNama);
-
     function hantarDaftar() {
         const nama = document.getElementById('nama').value.trim();
         const hp = document.getElementById('no_hp').value.trim();
+        
         if (!nama || !hp) return alert("Sila isi nama dan nombor telefon.");
 
-        document.getElementById('btn-submit').disabled = true;
-        document.getElementById('btn-submit').innerText = "MENDAFTAR...";
+        const btnSubmit = document.getElementById('btn-submit');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Mendaftarkan...";
 
         fetch('/api/daftar', {
             method: 'POST',
@@ -146,74 +148,79 @@
         })
         .then(res => res.json())
         .then(data => {
-            localStorage.setItem('no_saya', data.no_giliran);
-            localStorage.setItem('nama_saya', data.nama);
-            tampilStatus(data.no_giliran, data.nama);
+            if (data.no_giliran) {
+                localStorage.setItem('no_saya', data.no_giliran);
+                localStorage.setItem('nama_saya', data.nama);
+                localStorage.setItem('tarikh_daftar', hariIni);
+                tampilStatus(data.no_giliran, data.nama);
+            } else {
+                alert("Gagal mendaftar. Sila cuba lagi.");
+                btnSubmit.disabled = false;
+                btnSubmit.innerText = "Daftar Sekarang";
+            }
         })
         .catch(err => {
-            alert("Ralat sambungan. Sila cuba lagi.");
-            document.getElementById('btn-submit').disabled = false;
-            document.getElementById('btn-submit').innerText = "DAFTAR SEKARANG";
+            console.error(err);
+            alert("Ralat sambungan ke pelayan.");
+            btnSubmit.disabled = false;
         });
     }
 
     function tampilStatus(no, nama) {
         document.getElementById('section-daftar').style.display = 'none';
         document.getElementById('info-saya').style.display = 'block';
-        document.getElementById('no-saya').innerText = no;
-        document.getElementById('nama-anda').innerText = nama;
+        document.getElementById('no-saya').innerText = no || '---';
+        document.getElementById('nama-anda').innerText = nama || '---';
     }
 
     function kemaskiniLive() {
         fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
-            const noSekarang = data.nombor_sekarang;
-            const totalDaftar = data.jumlah_giliran;
-            document.getElementById('no-live').innerText = noSekarang;
-
-            // LOGIK RESET PINTAR (Jika Admin reset data ke 0)
-            if(noSekarang === 0 && totalDaftar === 0) {
-                if(localStorage.getItem('no_saya')) {
-                    localStorage.clear();
-                    document.getElementById('info-saya').style.display = 'none';
-                    document.getElementById('section-daftar').style.display = 'block';
-                    document.getElementById('nama').value = '';
-                    document.getElementById('no_hp').value = '';
-                }
-                return;
-            }
+            // Jika Firebase kosong (null), paksa jadi 0 supaya tidak keluar 'undefined'
+            const noSekarang = data.nombor_sekarang || 0;
+            const totalDaftar = data.jumlah_giliran || 0;
+            
+            const elementNoLive = document.getElementById('no-live');
+            if(elementNoLive) elementNoLive.innerText = noSekarang;
 
             const noSaya = localStorage.getItem('no_saya');
+            const namaSaya = localStorage.getItem('nama_saya');
+
             if (noSaya) {
-                const baki = noSaya - noSekarang;
+                tampilStatus(noSaya, namaSaya); // Pastikan status terpapar jika ada data
+                
+                const baki = parseInt(noSaya) - parseInt(noSekarang);
                 const pesan = document.getElementById('pesan-status');
                 
                 if (baki > 0) {
                     pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
-                    pesan.className = "fw-bold small mt-2 text-warning";
                     window.spoken = false;
                 } else if (baki === 0) {
                     pesan.innerText = "GILIRAN ANDA! Sila masuk.";
-                    pesan.className = "fw-bold small mt-2 text-success";
-                    
                     if (suaraAktif && !window.spoken) {
-                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk ke bilik rawatan.");
+                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", " + namaSaya + " sila masuk.");
                         msg.lang = 'ms-MY';
                         window.speechSynthesis.speak(msg);
                         window.spoken = true;
                     }
                 } else {
                     pesan.innerText = "Giliran anda telah tamat.";
-                    pesan.className = "fw-bold small mt-2 text-secondary";
                 }
             }
-        });
+        })
+        .catch(err => console.log("Gagal mengemaskini status live."));
     }
 
-    // Update setiap 4 saat supaya tidak membebankan server
-    setInterval(kemaskiniLive, 4000);
+    // Jalankan kemaskini setiap 5 saat
+    setInterval(kemaskiniLive, 5000);
     kemaskiniLive();
+
+    // Check jika sudah berdaftar semasa mula-mula buka page
+    if (localStorage.getItem('no_saya')) {
+        tampilStatus(localStorage.getItem('no_saya'), localStorage.getItem('nama_saya'));
+    }
+
 </script>
 </body>
 </html>
