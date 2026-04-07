@@ -101,6 +101,16 @@
     let suaraAktif = false;
     window.spoken = false;
 
+    // 1. LOGIK AUTO-RESET SETIAP HARI
+    const hariIni = new Date().toLocaleDateString('en-CA'); // Menghasilkan format YYYY-MM-DD ikut waktu lokal
+    const tarikhSimpanan = localStorage.getItem('tarikh_daftar');
+
+    // Jika tarikh yang tersimpan bukan tarikh hari ini, padam semua data lama
+    if (tarikhSimpanan !== hariIni) {
+        localStorage.clear();
+        console.log("Hari baru dikesan. Data lama dipadam secara automatik.");
+    }
+
     function aktifkanSuara() {
         suaraAktif = true;
         let btn = document.getElementById('btn-suara');
@@ -114,6 +124,7 @@
         window.speechSynthesis.speak(test);
     }
 
+    // Paparkan status jika sudah daftar hari ini
     const savedNo = localStorage.getItem('no_saya');
     const savedNama = localStorage.getItem('nama_saya');
     if (savedNo) tampilStatus(savedNo, savedNama);
@@ -131,8 +142,10 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({nama: nama, no_hp: hp})
         }).then(res => res.json()).then(data => {
+            // SIMPAN DATA & TARIKH DAFTAR
             localStorage.setItem('no_saya', data.no_giliran);
             localStorage.setItem('nama_saya', data.nama);
+            localStorage.setItem('tarikh_daftar', hariIni); // <--- Simpan tarikh hari ini
             tampilStatus(data.no_giliran, data.nama);
         });
     }
@@ -150,6 +163,7 @@
             const totalDaftar = data.jumlah_giliran;
             document.getElementById('no-live').innerText = noSekarang;
 
+            // Jika sistem direset oleh admin (semua jadi 0), padam data di browser
             if(noSekarang === 0 && totalDaftar === 0) {
                 if(localStorage.getItem('no_saya')) {
                     localStorage.clear();
@@ -176,7 +190,7 @@
                     }
                 } else {
                     pesan.innerText = "Giliran anda telah tamat.";
-					pesan.className = "small fw-bold mt-1 text-secondary";
+                    pesan.className = "small fw-bold mt-1 text-secondary";
                 }
             }
         });

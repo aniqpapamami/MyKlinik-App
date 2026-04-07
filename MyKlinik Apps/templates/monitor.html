@@ -63,11 +63,19 @@
     }
 
     function checkQueue() {
-        fetch('/api/status_live').then(res => res.json()).then(data => {
-            const no = data.nombor_sekarang;
-            const el = document.getElementById('displayNo');
+    fetch('/api/status_live')
+    .then(res => res.json())
+    .then(data => {
+        // Tambah console.log ini untuk awak debug dalam browser (Tekan F12)
+        console.log("Data diterima:", data); 
+        
+        const no = data.nombor_sekarang;
+        const el = document.getElementById('displayNo');
+        
+        // Pastikan 'no' bukan null atau undefined sebelum tunjuk
+        if (no !== undefined && no !== null) {
             el.innerText = no;
-
+            
             if (no !== lastNo) {
                 if (lastNo !== -1 && no !== 0) {
                     if (audioReady) {
@@ -80,8 +88,9 @@
                 }
                 lastNo = no;
             }
-        });
-    }
+        }
+    });
+}
 
     const ads = [
         { title: "VAKSIN FLU RM70", desc: "Lindungi keluarga anda hari ini." },

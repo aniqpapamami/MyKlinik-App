@@ -50,6 +50,10 @@ def logout():
 def api_daftar():
     data = request.json
     today = get_today()
+    
+    # Ambil waktu Malaysia sekarang
+    waktu_sekarang = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
+    
     res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
     no_baru = (res.json() or 0) + 1
     
@@ -59,7 +63,7 @@ def api_daftar():
         'no_hp': data.get('no_hp'),
         'no_giliran': no_baru,
         'status': 'menunggu',
-        'masa': datetime.now().strftime('%H:%M:%S')
+        'masa': waktu_sekarang # <--- Guna waktu Malaysia
     })
     return jsonify({'no_giliran': no_baru, 'nama': data.get('nama')})
 
@@ -76,11 +80,33 @@ def status_live():
 @app.route('/api/next', methods=['POST'])
 def panggil_next():
     today = get_today()
-    res = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-    no_baru = (res.json() or 0) + 1
+    
+    # 1. Ambil nombor sekarang dan jumlah orang yang sudah daftar
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    
+    no_sekarang = res_now.json() or 0
+    total_daftar = res_total.json() or 0
+    
+    # 2. SEMAKAN: Jika nombor sekarang sudah sampai had jumlah pendaftar
+    if no_sekarang >= total_daftar:
+        return jsonify({
+            'success': False, 
+            'message': 'Tiada pesakit lagi dalam senarai.',
+            'nombor_sekarang': no_sekarang
+        }), 400
+
+    # 3. Jika masih ada pesakit, baru naikkan nombor
+    no_baru = no_sekarang + 1
     requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    
+    # Kemaskini status pesakit tersebut kepada 'sedang_dirawat'
     requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
-    return jsonify({'nombor_sekarang': no_baru})
+    
+    return jsonify({
+        'success': true,
+        'nombor_sekarang': no_baru
+    })
 
 @app.route('/api/update_status', methods=['POST'])
 def update_status():
@@ -96,6 +122,15 @@ def get_senarai():
     today = get_today()
     res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
     return jsonify(res.json() or {})
+	
+@app.route('/api/get_senarai_tarikh/<tarikh>')
+def get_senarai_tarikh(tarikh):
+    # tarikh akan diterima dalam format YYYY-MM-DD dari frontend
+    if not session.get('admin_logged_in'):
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
+    return jsonify(res.json() or {})	
 
 if __name__ == '__main__':
     app.run(debug=True)

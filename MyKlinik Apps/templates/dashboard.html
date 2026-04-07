@@ -29,14 +29,24 @@
     <div class="row g-4">
         <div class="col-md-4 text-center">
             <div class="card p-4 shadow-lg h-100">
-                <p class="text-secondary small fw-bold">SEDANG DIPANGGIL</p>
+                <p class="text-secondary small fw-bold">GILIRAN SEDANG DIPANGGIL</p>
                 <div id="now-serving" class="no-box my-3">0</div>
                 <button onclick="panggilNext()" class="btn btn-primary btn-lg w-100 fw-bold py-3 shadow mb-3">PANGGIL NEXT</button>
-                <p class="small text-secondary">Jumlah Daftar: <b id="total-today" class="text-white">0</b></p>
+                <p class="small text-secondary">Jumlah Pesakit Daftar: <b id="total-today" class="text-white">0</b></p>
+            </div>
+        </div>
+		<div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">Pilih Tarikh Rekod:</label>
+                <div class="input-group">
+                    <input type="date" id="pilih-tarikh" class="form-control">
+                    <button class="btn btn-primary" onclick="cariSejarah()">Cari Rekod</button>
+                </div>
             </div>
         </div>
         <div class="col-md-8">
             <div class="card p-4 shadow-lg h-100">
+			    
                 <h5 class="fw-bold mb-3"><i class="fas fa-list-ul me-2"></i>Senarai Pesakit</h5>
                 <div class="table-responsive">
                     <table class="table table-dark table-hover align-middle">
@@ -56,6 +66,38 @@
 </nav>
 
 <script>
+    function cariSejarah() {
+    const tarikh = document.getElementById('pilih-tarikh').value;
+    if (!tarikh) return alert("Sila pilih tarikh terlebih dahulu.");
+
+    // Tukar tajuk jadual supaya admin tahu dia sedang tengok tarikh lama
+    document.getElementById('tajuk-senarai').innerText = "Rekod Pesakit Tarikh: " + tarikh;
+
+    fetch('/api/get_senarai_tarikh/' + tarikh)
+    .then(res => res.json())
+    .then(data => {
+        let html = '';
+        const pesakitArr = Object.values(data);
+        
+        if (pesakitArr.length === 0) {
+            html = '<tr><td colspan="4" class="text-center text-muted">Tiada rekod pada tarikh ini.</td></tr>';
+        } else {
+            // Susun nombor giliran dari kecil ke besar
+            pesakitArr.sort((a, b) => a.no_giliran - b.no_giliran);
+            
+            pesakitArr.forEach(p => {
+                html += `
+                    <tr>
+                        <td>${p.no_giliran}</td>
+                        <td>${p.nama}</td>
+                        <td>${p.masa}</td>
+                        <td><span class="badge bg-secondary">${p.status}</span></td>
+                    </tr>`;
+            });
+        }
+        document.getElementById('body-senarai').innerHTML = html;
+    });
+}
     function panggilNext() { fetch('/api/next', { method: 'POST' }).then(() => loadData()); }
     function updateStatus(no, stat) {
         fetch('/api/update_status', {
