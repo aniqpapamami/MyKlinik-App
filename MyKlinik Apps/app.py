@@ -74,13 +74,23 @@ def api_daftar():
 
 @app.route('/api/status_live')
 def status_live():
-    today = get_today()
-    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-    return jsonify({
-        'nombor_sekarang': res_now.json() or 0,
-        'jumlah_giliran': res_total.json() or 0
-    })
+    try:
+        today = get_today()
+        # Ambil data dari Firebase
+        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+        
+        # Pastikan data yang diterima sah
+        nombor_sekarang = res_now.json() if res_now.json() is not None else 0
+        jumlah_giliran = res_total.json() if res_total.json() is not None else 0
+        
+        return jsonify({
+            'nombor_sekarang': nombor_sekarang,
+            'jumlah_giliran': jumlah_giliran
+        })
+    except Exception as e:
+        print(f"Ralat Status Live: {e}") # Ini akan keluar di Render Logs
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/next', methods=['POST'])
 def panggil_next():
