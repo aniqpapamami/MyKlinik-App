@@ -9,7 +9,9 @@ app.secret_key = "klinik_rahsia_123"
 BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 def get_today():
-    return datetime.now().strftime('%Y-%m-%d')
+    # Tambah 8 jam untuk tukar waktu UTC ke waktu Malaysia
+    waktu_malaysia = datetime.now() + timedelta(hours=8)
+    return waktu_malaysia.strftime('%Y-%m-%d')
 
 @app.route('/')
 def index():
