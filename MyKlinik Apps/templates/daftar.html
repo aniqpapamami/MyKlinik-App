@@ -101,30 +101,31 @@
     let suaraAktif = false;
     window.spoken = false;
 
-    // 1. LOGIK AUTO-RESET SETIAP HARI
-    const hariIni = new Date().toLocaleDateString('en-CA'); // Menghasilkan format YYYY-MM-DD ikut waktu lokal
-    const tarikhSimpanan = localStorage.getItem('tarikh_daftar');
+    // Fungsi untuk dapatkan tarikh hari ini (YYYY-MM-DD)
+    function getTarikhHariIni() {
+        return new Date().toLocaleDateString('en-CA');
+    }
 
-    // Jika tarikh yang tersimpan bukan tarikh hari ini, padam semua data lama
-    if (tarikhSimpanan !== hariIni) {
+    // 1. AUTO-RESET: Jika hari bertukar, bersihkan localStorage
+    const hariIni = getTarikhHariIni();
+    const tarikhSimpanan = localStorage.getItem('tarikh_daftar');
+    if (tarikhSimpanan && tarikhSimpanan !== hariIni) {
         localStorage.clear();
-        console.log("Hari baru dikesan. Data lama dipadam secara automatik.");
+        console.log("Data hari semalam dipadam.");
     }
 
     function aktifkanSuara() {
         suaraAktif = true;
         let btn = document.getElementById('btn-suara');
         btn.innerText = "Suara Aktif";
-        btn.style.background = "#198754";
-        btn.style.color = "white";
-        btn.style.border = "none";
+        btn.className = "btn btn-success btn-sm w-100 mt-2"; // Gunakan class Bootstrap jika ada
         
         let test = new SpeechSynthesisUtterance("Sistem sedia");
         test.lang = 'ms-MY';
         window.speechSynthesis.speak(test);
     }
 
-    // Paparkan status jika sudah daftar hari ini
+    // Paparkan status jika sudah ada data dalam cache
     const savedNo = localStorage.getItem('no_saya');
     const savedNama = localStorage.getItem('nama_saya');
     if (savedNo) tampilStatus(savedNo, savedNama);
@@ -132,21 +133,33 @@
     function hantarDaftar() {
         const nama = document.getElementById('nama').value.trim();
         const hp = document.getElementById('no_hp').value.trim();
+        
         if (!nama || !hp) return alert("Sila isi nama dan nombor telefon.");
 
-        document.getElementById('btn-submit').disabled = true;
-        document.getElementById('btn-submit').innerText = "...";
+        const btnSubmit = document.getElementById('btn-submit');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Memproses...";
 
         fetch('/api/daftar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({nama: nama, no_hp: hp})
-        }).then(res => res.json()).then(data => {
-            // SIMPAN DATA & TARIKH DAFTAR
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Ralat Pelayan');
+            return res.json();
+        })
+        .then(data => {
+            // SIMPAN DATA & TARIKH TERKINI
             localStorage.setItem('no_saya', data.no_giliran);
             localStorage.setItem('nama_saya', data.nama);
-            localStorage.setItem('tarikh_daftar', hariIni); // <--- Simpan tarikh hari ini
+            localStorage.setItem('tarikh_daftar', getTarikhHariIni()); 
             tampilStatus(data.no_giliran, data.nama);
+        })
+        .catch(err => {
+            alert("Gagal mendaftar. Sila cuba lagi.");
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "Daftar Sekarang";
         });
     }
 
@@ -158,44 +171,50 @@
     }
 
     function kemaskiniLive() {
-        fetch('/api/status_live').then(res => res.json()).then(data => {
+        fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
             const noSekarang = data.nombor_sekarang;
             const totalDaftar = data.jumlah_giliran;
             document.getElementById('no-live').innerText = noSekarang;
 
-            // Jika sistem direset oleh admin (semua jadi 0), padam data di browser
+            // Logik Reset Global (Jika Admin kosongkan senarai)
             if(noSekarang === 0 && totalDaftar === 0) {
                 if(localStorage.getItem('no_saya')) {
                     localStorage.clear();
-                    document.getElementById('info-saya').style.display = 'none';
-                    document.getElementById('section-daftar').style.display = 'block';
+                    location.reload(); // Refresh untuk kembali ke borang daftar
                 }
                 return;
             }
 
             const noSaya = localStorage.getItem('no_saya');
             if (noSaya) {
-                const baki = noSaya - noSekarang;
+                const baki = parseInt(noSaya) - parseInt(noSekarang);
                 const pesan = document.getElementById('pesan-status');
+                
                 if (baki > 0) {
-                    pesan.innerText = "Lagi " + baki + " orang.";
+                    pesan.innerText = "Lagi " + baki + " orang sebelum anda.";
+                    pesan.className = "text-primary fw-bold";
                     window.spoken = false;
                 } else if (baki === 0) {
                     pesan.innerText = "GILIRAN ANDA! Sila masuk.";
+                    pesan.className = "text-danger fw-bold animate-blink"; // Tambah efek jika mahu
                     if (suaraAktif && !window.spoken) {
-                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", sila masuk.");
+                        let msg = new SpeechSynthesisUtterance("Nombor " + noSaya + ", " + savedNama + " sila masuk.");
                         msg.lang = 'ms-MY';
                         window.speechSynthesis.speak(msg);
                         window.spoken = true;
                     }
                 } else {
                     pesan.innerText = "Giliran anda telah tamat.";
-                    pesan.className = "small fw-bold mt-1 text-secondary";
+                    pesan.className = "text-secondary mt-1";
                 }
             }
-        });
+        })
+        .catch(err => console.log("Gagal ambil status live"));
     }
-    setInterval(kemaskiniLive, 4000);
+
+    setInterval(kemaskiniLive, 5000); // 5 saat sekali untuk kurangkan beban server Render
     kemaskiniLive();
 </script>
 </body>

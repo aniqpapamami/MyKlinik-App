@@ -65,6 +65,11 @@ def api_daftar():
         'status': 'menunggu',
         'masa': waktu_sekarang # <--- Guna waktu Malaysia
     })
+	# Pastikan nombor_sekarang wujud, jika null (hari baru), set kepada 0
+    res_check = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    if res_check.json() is None:
+        requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
+
     return jsonify({'no_giliran': no_baru, 'nama': data.get('nama')})
 
 @app.route('/api/status_live')
@@ -104,7 +109,7 @@ def panggil_next():
     requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
     
     return jsonify({
-        'success': true,
+        'success': True,
         'nombor_sekarang': no_baru
     })
 
