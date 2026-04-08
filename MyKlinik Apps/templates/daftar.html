@@ -221,6 +221,13 @@
         tampilStatus(localStorage.getItem('no_saya'), localStorage.getItem('nama_saya'));
     }
 
+	// Logik untuk buang memory jika admin sudah reset/padam data di Firebase
+    if (data.nombor_sekarang === 0 && data.jumlah_giliran === 0) {
+        if (localStorage.getItem('no_saya')) {
+            localStorage.clear(); // Padam semua memori lama
+            location.reload();    // Refresh halaman untuk kembali ke borang daftar
+        }
+    }
 </script>
 </body>
 </html>
