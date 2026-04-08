@@ -59,6 +59,7 @@ def api_daftar():
         requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
         requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
             'nama': data.get('nama'),
+			'no_ic': data.get('no_ic'),
             'no_hp': data.get('no_hp'),
             'no_giliran': no_baru,
             'status': 'menunggu',

@@ -64,13 +64,19 @@
         </div>
         
         <div class="input-group">
+            <label>NO. KAD PENGENALAN (IC)</label>
+            <input type="text" id="no_ic" class="input-style" placeholder="Contoh: 012345-01-1234">
+        </div>
+        
+		<div class="input-group">
             <label>NO. TELEFON (HP)</label>
             <input type="tel" id="no_hp" class="input-style" placeholder="Contoh: 0123456789">
         </div>
-        
+		
         <button onclick="hantarDaftar()" id="btn-submit" class="btn-daftar">DAFTAR SEKARANG</button>
     </div>
 
+	
     <!-- SEKSYEN STATUS -->
     <div class="kad" style="text-align:center;">
         <span class="badge-live">LIVE STATUS</span>
@@ -133,9 +139,10 @@
 
     function hantarDaftar() {
         const nama = document.getElementById('nama').value.trim();
+		const ic = document.getElementById('no_ic').value.trim();
         const hp = document.getElementById('no_hp').value.trim();
         
-        if (!nama || !hp) return alert("Sila isi nama dan nombor telefon.");
+        if (!nama || !ic || !hp) return alert("Sila isi nama , ic dan nombor telefon.");
 
         const btnSubmit = document.getElementById('btn-submit');
         btnSubmit.disabled = true;
@@ -144,15 +151,16 @@
         fetch('/api/daftar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({nama: nama, no_hp: hp})
+            body: JSON.stringify({nama: nama, no_ic: ic, no_hp: hp})
         })
         .then(res => res.json())
         .then(data => {
             if (data.no_giliran) {
                 localStorage.setItem('no_saya', data.no_giliran);
                 localStorage.setItem('nama_saya', data.nama);
+				localStorage.setItem('ic_saya', ic);
                 localStorage.setItem('tarikh_daftar', hariIni);
-                tampilStatus(data.no_giliran, data.nama);
+                tampilStatus(data.no_giliran, data.nama, ic);
             } else {
                 alert("Gagal mendaftar. Sila cuba lagi.");
                 btnSubmit.disabled = false;
@@ -166,11 +174,12 @@
         });
     }
 
-    function tampilStatus(no, nama) {
+    function tampilStatus(no, nama, ic) {
         document.getElementById('section-daftar').style.display = 'none';
         document.getElementById('info-saya').style.display = 'block';
         document.getElementById('no-saya').innerText = no || '---';
         document.getElementById('nama-anda').innerText = nama || '---';
+		document.getElementById('ic-anda').innerText = "IC: "+ ic || '---';
     }
 
     function kemaskiniLive() {
@@ -181,6 +190,11 @@
             const noSekarang = data.nombor_sekarang || 0;
             const totalDaftar = data.jumlah_giliran || 0;
             
+			// LOGIK RESET MEMORI: Jika database kosong, buang memori browser
+            if (noSekarang === 0 && totalDaftar === 0 && localStorage.getItem('no_saya')) {
+                localStorage.clear();
+                location.reload();
+            }
             const elementNoLive = document.getElementById('no-live');
             if(elementNoLive) elementNoLive.innerText = noSekarang;
 
@@ -218,7 +232,7 @@
 
     // Check jika sudah berdaftar semasa mula-mula buka page
     if (localStorage.getItem('no_saya')) {
-        tampilStatus(localStorage.getItem('no_saya'), localStorage.getItem('nama_saya'));
+        tampilStatus(localStorage.getItem('no_saya'), localStorage.getItem('nama_saya'), localStorage.getItem('ic_saya'));
     }
 
 	// Logik untuk buang memory jika admin sudah reset/padam data di Firebase
