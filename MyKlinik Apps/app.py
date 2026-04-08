@@ -44,124 +44,74 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('index'))
 
-# --- API ---
+# --- API SISTEM ---
 
 @app.route('/api/daftar', methods=['POST'])
 def api_daftar():
     try:
         data = request.json
-        if not data or 'nama' not in data:
-            return jsonify({'error': 'Data tidak lengkap'}), 400
-            
         today = get_today()
-        waktu_sekarang = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
+        waktu = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
         
-        # 1. Ambil jumlah pendaftar hari ini
-        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-        jumlah = res_total.json()
-        no_baru = (jumlah if jumlah is not None else 0) + 1
+        res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+        no_baru = (res.json() or 0) + 1
         
-        # 2. Kemaskini jumlah besar di Firebase
         requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
-        
-        # 3. Simpan butiran pesakit
         requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
             'nama': data.get('nama'),
             'no_hp': data.get('no_hp'),
             'no_giliran': no_baru,
             'status': 'menunggu',
-            'masa': waktu_sekarang
+            'masa': waktu
         })
-
-        # 4. Pastikan nombor_sekarang ada (Set 0 jika hari baru)
+        
+        # Set nombor_sekarang ke 0 jika belum ada (hari baru)
         res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
         if res_now.json() is None:
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
 
         return jsonify({'no_giliran': no_baru, 'nama': data.get('nama')})
-        
     except Exception as e:
-        print(f"Ralat Daftar: {e}") 
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/status_live')
 def status_live():
-    try:
-        today = get_today()
-        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-        
-        return jsonify({
-            'nombor_sekarang': res_now.json() or 0,
-            'jumlah_giliran': res_total.json() or 0
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    today = get_today()
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    return jsonify({
+        'nombor_sekarang': res_now.json() or 0,
+        'jumlah_giliran': res_total.json() or 0
+    })
 
 @app.route('/api/next', methods=['POST'])
-def panggil_next():
-    try:
-        today = get_today()
-        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-        
-        no_sekarang = res_now.json() or 0
-        total_daftar = res_total.json() or 0
-        
-        if no_sekarang >= total_daftar:
-            return jsonify({
-                'success': False, 
-                'message': 'Tiada pesakit lagi dalam senarai.',
-                'nombor_sekarang': no_sekarang
-            }), 400
+def api_next():
+    today = get_today()
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    
+    no_skrg = res_now.json() or 0
+    total = res_total.json() or 0
+    
+    if no_skrg >= total:
+        return jsonify({'success': False, 'message': 'Tiada pesakit lagi.'})
 
-        no_baru = no_sekarang + 1
-        requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
-        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
-        
-        return jsonify({
-            'success': True, # Pastikan T besar
-            'nombor_sekarang': no_baru
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    no_baru = no_skrg + 1
+    requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
+    return jsonify({'success': True, 'no': no_baru})
 
 @app.route('/api/kemaskini_status', methods=['POST'])
 def kemaskini_status():
-    try:
-        data = request.json
-        no_giliran = data.get('no_giliran')
-        status_baru = data.get('status') # 'selesai' atau 'tidak_hadir'
-        today = get_today()
-
-        if not no_giliran or not status_baru:
-            return jsonify({'success': False, 'message': 'Data tidak lengkap'}), 400
-
-        # Kemaskini status pesakit secara spesifik di Firebase
-        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_giliran}.json", 
-                       json={'status': status_baru})
-        
-        return jsonify({'success': True, 'message': f'Status dikemaskini ke {status_baru}'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-@app.route('/api/get_senarai_hari_ini')
-def get_senarai():
+    data = request.json
     today = get_today()
-    res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
-    return jsonify(res.json() or {})
-	
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{data['no_giliran']}.json", 
+                   json={'status': data['status']})
+    return jsonify({'success': True})
+
 @app.route('/api/get_senarai_tarikh/<tarikh>')
 def get_senarai_tarikh(tarikh):
-    try:
-        # Kita benarkan akses tanpa check session yang ketat untuk mudahkan carian
-        res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
-        data = res.json()
-        
-        # Jika Firebase bagi None, pulangkan objek kosong {}
-        return jsonify(data or {})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+    res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
+    return jsonify(res.json() or {})
 if __name__ == '__main__':
     app.run(debug=True)
