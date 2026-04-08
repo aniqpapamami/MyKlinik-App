@@ -114,7 +114,7 @@ def get_senarai_tarikh(tarikh):
     res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
     return jsonify(res.json() or {})
 	
-	@app.route('/api/padam_pesakit', methods=['POST'])
+@app.route('/api/padam_pesakit', methods=['POST'])
 def padam_pesakit():
     try:
         data = request.json
