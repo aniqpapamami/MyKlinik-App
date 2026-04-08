@@ -4,80 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Giliran - MyKlinik</title>
-    <!-- Bootstrap CSS -->
+    <!-- Bootstrap 5 CSS -->
     <link href="https://jsdelivr.net" rel="stylesheet">
     <style>
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .monitor-card {
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            background: white;
+        body { 
+            background-color: #f0f2f5; 
+            font-family: 'Arial', sans-serif;
+            overflow: hidden; /* Elak scrollbar */
+        }
+        .monitor-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
         }
         .digital-clock {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #2c3e50;
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            font-size: 5rem;
+            font-weight: 800;
+            color: #1a2a6c;
+            line-height: 1;
             font-family: 'Courier New', Courier, monospace;
         }
-        .number-display {
-            font-size: 10rem;
-            font-weight: 800;
-            color: #d63031;
-            line-height: 1;
-        }
-        .status-label {
+        .date-display {
             font-size: 1.5rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
+            color: #555;
+            margin-top: 10px;
         }
-        .footer-text { color: #7f8c8d; margin-top: 20px; }
+        .main-card {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            width: 95%;
+            max-width: 1200px;
+            overflow: hidden;
+        }
+        .number-box {
+            background: #fff;
+            padding: 40px;
+            border-right: 2px solid #eee;
+        }
+        .number-display {
+            font-size: 15rem;
+            font-weight: 900;
+            color: #e74c3c;
+            line-height: 0.8;
+            margin: 20px 0;
+        }
+        .info-box {
+            background: #fdfdfd;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .ad-title {
+            color: #2c3e50;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        .ad-content {
+            font-size: 1.8rem;
+            color: #34495e;
+            min-height: 150px;
+        }
+        .running-text {
+            background: #1a2a6c;
+            color: white;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
 
-<div class="container vh-100 d-flex flex-column justify-content-center align-items-center">
+<div class="monitor-container">
     
-    <!-- Bahagian Jam & Tarikh -->
-    <div class="text-center mb-4">
+    <!-- BAHAGIAN ATAS: JAM & TARIKH -->
+    <div class="header-section">
         <div id="jam-digital" class="digital-clock">00:00:00</div>
-        <div id="tarikh-hari-ini" class="fs-4 text-secondary">---</div>
+        <div id="tarikh-hari-ini" class="date-display">Memuatkan tarikh...</div>
     </div>
 
-    <!-- Kad Monitor Utama -->
-    <div class="card monitor-card p-5 text-center w-100" style="max-width: 700px;">
-        <div class="status-label text-primary fw-bold mb-2">NOMBOR SEKARANG</div>
-        <hr>
-        <div id="no-live" class="number-display">0</div>
-        <hr>
-        <div class="fs-5 text-muted">Sila bersedia untuk nombor seterusnya</div>
+    <!-- BAHAGIAN TENGAH: NOMBOR & IKLAN -->
+    <div class="main-card">
+        <div class="row g-0">
+            <!-- Kiri: Nombor Giliran -->
+            <div class="col-md-6 text-center number-box">
+                <h2 class="text-primary fw-bold">NOMBOR SEKARANG</h2>
+                <div id="no-live" class="number-display">0</div>
+                <p class="text-muted fs-4">Sila masuk ke Bilik Rawatan</p>
+            </div>
+
+            <!-- Kanan: Iklan & Info Klinik -->
+            <div class="col-md-6 info-box text-center">
+                <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <h2 class="ad-title text-success">Info Klinik</h2>
+                            <p class="ad-content">Sila sediakan MyKad atau Dokumen Pengenalan Diri anda.</p>
+                        </div>
+                        <div class="carousel-item">
+                            <h2 class="ad-title text-primary">Peringatan</h2>
+                            <p class="ad-content">Kesihatan anda keutamaan kami. Sila cuci tangan anda.</p>
+                        </div>
+                        <div class="carousel-item">
+                            <h2 class="ad-title text-danger">Waktu Operasi</h2>
+                            <p class="ad-content">Isnin - Jumaat: 8:00 AM - 10:00 PM<br>Sabtu/Ahad: Tutup</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="footer-text">
-        &copy; 2026 MyKlinik-Python | Sistem Giliran Digital
-    </div>
 </div>
 
+<!-- BAHAGIAN BAWAH: RUNNING TEXT -->
+<div class="running-text">
+    <marquee scrollamount="8">
+        Selamat Datang ke MyKlinik. Sila ambil nombor giliran di kaunter atau melalui sistem atas talian kami. Harap maklum, giliran mungkin berubah mengikut kecemasan kes.
+    </marquee>
+</div>
+
+<!-- Scripts -->
+<script src="https://jsdelivr.net"></script>
+
 <script>
-    // 1. FUNGSI JAM DIGITAL REAL-TIME
-    function kemaskiniJam() {
+    // 1. FUNGSI JAM & TARIKH
+    function kemaskiniMasa() {
         const sekarang = new Date();
         
-        // Format Jam (Contoh: 14:05:01)
+        // Jam (Format 24 Jam)
         const jam = sekarang.toLocaleTimeString('en-GB', { 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
             timeZone: 'Asia/Kuala_Lumpur' 
         });
 
-        // Format Tarikh (Contoh: Selasa, 7 April 2026)
+        // Tarikh
         const tarikh = sekarang.toLocaleDateString('ms-MY', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
             timeZone: 'Asia/Kuala_Lumpur'
         });
 
@@ -85,33 +161,41 @@
         document.getElementById('tarikh-hari-ini').innerText = tarikh;
     }
 
-    // 2. FUNGSI AMBIL NOMBOR LIVE DARI API
+    // 2. FUNGSI AMBIL NOMBOR LIVE
     function kemaskiniNombor() {
         fetch('/api/status_live')
             .then(res => res.json())
             .then(data => {
-                // Gunakan || 0 jika data null dari Firebase
                 const noSekarang = data.nombor_sekarang || 0;
                 const elementNo = document.getElementById('no-live');
                 
-                // Animasi ringkas jika nombor berubah
+                // Jika nombor berubah, beri efek kelip
                 if (elementNo.innerText != noSekarang) {
-                    elementNo.style.opacity = 0;
-                    setTimeout(() => {
-                        elementNo.innerText = noSekarang;
-                        elementNo.style.opacity = 1;
-                    }, 300);
+                    elementNo.style.color = '#f1c40f'; // Tukar warna sekejap
+                    elementNo.innerText = noSekarang;
+                    setTimeout(() => { elementNo.style.color = '#e74c3c'; }, 1000);
+                    
+                    // PANGGIL SUARA (Opsional - Jika Browser Benarkan)
+                    if(noSekarang > 0) {
+                        panggilNombor(noSekarang);
+                    }
                 }
             })
-            .catch(err => console.error("Gagal mendapatkan status live:", err));
+            .catch(err => console.log("Ralat API Live:", err));
     }
 
-    // Jalankan jam setiap saat
-    setInterval(kemaskiniJam, 1000);
-    kemaskiniJam();
+    function panggilNombor(no) {
+        let ucapan = new SpeechSynthesisUtterance("Nombor giliran " + no + " sila masuk.");
+        ucapan.lang = 'ms-MY';
+        window.speechSynthesis.speak(ucapan);
+    }
 
-    // Jalankan kemaskini nombor setiap 3 saat (lebih pantas untuk monitor)
-    setInterval(kemaskiniNombor, 3000);
+    // Tetapan Masa Kemaskini
+    setInterval(kemaskiniMasa, 1000);
+    setInterval(kemaskiniNombor, 3000); // Setiap 3 saat
+
+    // Panggil masa serta-merta bila load
+    kemaskiniMasa();
     kemaskiniNombor();
 </script>
 

@@ -50,35 +50,39 @@ def logout():
 def api_daftar():
     try:
         data = request.json
+        if not data or 'nama' not in data:
+            return jsonify({'error': 'Data tidak lengkap'}), 400
+            
         today = get_today()
         
-        # Waktu Malaysia
-        waktu_sekarang = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
+        # 1. Ambil jumlah (Guna .json di hujung URL)
+        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+        jumlah = res_total.json()
+        no_baru = (jumlah if jumlah is not None else 0) + 1
         
-        # 1. Ambil jumlah pendaftar sekarang
-        res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-        no_baru = (res.json() or 0) + 1
-        
-        # 2. Kemaskini jumlah besar
+        # 2. Simpan data (Gunakan PUT)
         requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
         
-        # 3. Simpan data pesakit
+        # 3. Simpan butiran pesakit
+        waktu = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
         requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
             'nama': data.get('nama'),
             'no_hp': data.get('no_hp'),
             'no_giliran': no_baru,
             'status': 'menunggu',
-            'masa': waktu_sekarang
+            'masa': waktu
         })
 
-        # 4. Pastikan nombor_sekarang wujud jika ini pendaftar pertama
-        res_check = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        if res_check.json() is None:
+        # 4. Pastikan nombor_sekarang ada
+        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+        if res_now.json() is None:
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
 
         return jsonify({'no_giliran': no_baru, 'nama': data.get('nama')})
+        
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Ralat Daftar: {e}") # Tengok ralat ni di Render Logs
+        return jsonify({'error': 'Gagal mendaftar di server'}), 500
 
 @app.route('/api/status_live')
 def status_live():
