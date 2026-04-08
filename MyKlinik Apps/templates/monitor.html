@@ -3,115 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor | MyKlinik</title>
+    <title>Monitor Giliran - MyKlinik</title>
+    <!-- Bootstrap CSS -->
     <link href="https://jsdelivr.net" rel="stylesheet">
-    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { background: #000; color: #fff; overflow: hidden; height: 100vh; font-family: 'Inter', sans-serif; }
-        .ads-section { height: 100vh; background: #111; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 8px solid #0d6efd; padding: 40px; }
-        #adContainer { width: 100%; padding: 40px; border-radius: 30px; background: rgba(13, 110, 253, 0.05); border: 2px solid #0d6efd; text-align: center; transition: opacity 0.8s; }
-        .queue-section { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .main-number { font-size: 15rem; font-weight: 900; color: #fff; text-shadow: 0 0 50px rgba(13,110,253,0.6); }
-        .flash { animation: flash-anim 1s 3; }
-        @keyframes flash-anim { 50% { color: #ff0000; transform: scale(1.1); } }
-        .footer-news { position: absolute; bottom: 70px; width: 100%; background: #0d6efd; padding: 15px; font-size: 1.8rem; overflow: hidden; }
-        .marquee { white-space: nowrap; animation: marquee 30s linear infinite; display: inline-block; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
-        .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 11px; }
-        .nav-item i { font-size: 22px; display: block; }
-        .nav-item.active { color: #0d6efd; }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .monitor-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .digital-clock {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .number-display {
+            font-size: 10rem;
+            font-weight: 800;
+            color: #d63031;
+            line-height: 1;
+        }
+        .status-label {
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .footer-text { color: #7f8c8d; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid p-0">
-    <div class="row g-0">
-        <div class="col-8 ads-section">
-            <div id="adContainer">
-                <h1 class="display-2 fw-bold text-white mb-3" id="adTitle">MyKlinik Digital</h1>
-                <p class="h2 text-secondary" id="adDesc">Sila tunggu sebentar...</p>
-            </div>
-        </div>
-        <div class="col-4 queue-section">
-            <h4 class="text-primary fw-bold">NOMBOR SEMASA</h4>
-            <div id="displayNo" class="main-number">0</div>
-            <button onclick="enableAudio()" id="audioBtn" class="btn btn-outline-light btn-sm mt-3">Aktifkan Suara</button>
-        </div>
+<div class="container vh-100 d-flex flex-column justify-content-center align-items-center">
+    
+    <!-- Bahagian Jam & Tarikh -->
+    <div class="text-center mb-4">
+        <div id="jam-digital" class="digital-clock">00:00:00</div>
+        <div id="tarikh-hari-ini" class="fs-4 text-secondary">---</div>
+    </div>
+
+    <!-- Kad Monitor Utama -->
+    <div class="card monitor-card p-5 text-center w-100" style="max-width: 700px;">
+        <div class="status-label text-primary fw-bold mb-2">NOMBOR SEKARANG</div>
+        <hr>
+        <div id="no-live" class="number-display">0</div>
+        <hr>
+        <div class="fs-5 text-muted">Sila bersedia untuk nombor seterusnya</div>
+    </div>
+
+    <div class="footer-text">
+        &copy; 2026 MyKlinik-Python | Sistem Giliran Digital
     </div>
 </div>
 
-<div class="footer-news">
-    <div class="marquee">Selamat Datang ke MyKlinik | Dr. Ahmad Bakri Bertugas Hari Ini | Pastikan memakai pelitup muka jika bergejala.</div>
-</div>
-
-<nav class="bottom-nav">
-    <a href="/" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
-    <a href="/daftar" class="nav-item"><i class="fas fa-ticket-alt"></i><span>Ambil No</span></a>
-    <a href="/monitor" class="nav-item active"><i class="fas fa-tv"></i><span>Monitor</span></a>
-</nav>
-
 <script>
-    let lastNo = -1;
-    let audioReady = false;
+    // 1. FUNGSI JAM DIGITAL REAL-TIME
+    function kemaskiniJam() {
+        const sekarang = new Date();
+        
+        // Format Jam (Contoh: 14:05:01)
+        const jam = sekarang.toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            timeZone: 'Asia/Kuala_Lumpur' 
+        });
 
-    function enableAudio() {
-        audioReady = true;
-        document.getElementById('audioBtn').className = "btn btn-success btn-sm mt-3";
-        document.getElementById('audioBtn').innerText = "Suara Aktif";
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("Monitor Sedia"));
+        // Format Tarikh (Contoh: Selasa, 7 April 2026)
+        const tarikh = sekarang.toLocaleDateString('ms-MY', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            timeZone: 'Asia/Kuala_Lumpur'
+        });
+
+        document.getElementById('jam-digital').innerText = jam;
+        document.getElementById('tarikh-hari-ini').innerText = tarikh;
     }
 
-    function checkQueue() {
-    fetch('/api/status_live')
-    .then(res => res.json())
-    .then(data => {
-        // Tambah console.log ini untuk awak debug dalam browser (Tekan F12)
-        console.log("Data diterima:", data); 
-        
-        const no = data.nombor_sekarang;
-        const el = document.getElementById('displayNo');
-        
-        // Pastikan 'no' bukan null atau undefined sebelum tunjuk
-        if (no !== undefined && no !== null) {
-            el.innerText = no;
-            
-            if (no !== lastNo) {
-                if (lastNo !== -1 && no !== 0) {
-                    if (audioReady) {
-                        let msg = new SpeechSynthesisUtterance("Nombor giliran " + no + ", sila masuk.");
-                        msg.lang = 'ms-MY';
-                        window.speechSynthesis.speak(msg);
-                    }
-                    el.classList.add('flash');
-                    setTimeout(() => el.classList.remove('flash'), 3000);
+    // 2. FUNGSI AMBIL NOMBOR LIVE DARI API
+    function kemaskiniNombor() {
+        fetch('/api/status_live')
+            .then(res => res.json())
+            .then(data => {
+                // Gunakan || 0 jika data null dari Firebase
+                const noSekarang = data.nombor_sekarang || 0;
+                const elementNo = document.getElementById('no-live');
+                
+                // Animasi ringkas jika nombor berubah
+                if (elementNo.innerText != noSekarang) {
+                    elementNo.style.opacity = 0;
+                    setTimeout(() => {
+                        elementNo.innerText = noSekarang;
+                        elementNo.style.opacity = 1;
+                    }, 300);
                 }
-                lastNo = no;
-            }
-        }
-    });
-}
-
-    const ads = [
-        { title: "VAKSIN FLU RM70", desc: "Lindungi keluarga anda hari ini." },
-        { title: "KAD KESIHATAN", desc: "Kami menerima panel & insurans terpilih." },
-        { title: "CHECK-UP PROMOSI", desc: "Pakej warga emas hanya RM150." }
-    ];
-    let adIndex = 0;
-    function rotateAds() {
-        const container = document.getElementById('adContainer');
-        container.style.opacity = 0;
-        setTimeout(() => {
-            adIndex = (adIndex + 1) % ads.length;
-            document.getElementById('adTitle').innerText = ads[adIndex].title;
-            document.getElementById('adDesc').innerText = ads[adIndex].desc;
-            container.style.opacity = 1;
-        }, 800);
+            })
+            .catch(err => console.error("Gagal mendapatkan status live:", err));
     }
 
-    setInterval(checkQueue, 4000);
-    setInterval(rotateAds, 10000);
-    rotateAds();
+    // Jalankan jam setiap saat
+    setInterval(kemaskiniJam, 1000);
+    kemaskiniJam();
+
+    // Jalankan kemaskini nombor setiap 3 saat (lebih pantas untuk monitor)
+    setInterval(kemaskiniNombor, 3000);
+    kemaskiniNombor();
 </script>
+
 </body>
 </html>
