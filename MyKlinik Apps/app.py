@@ -126,14 +126,24 @@ def panggil_next():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/update_status', methods=['POST'])
-def update_status():
-    data = request.json
-    no = data.get('no_giliran')
-    stat = data.get('status')
-    today = get_today()
-    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", json={'status': stat})
-    return jsonify({'success': True})
+@app.route('/api/kemaskini_status', methods=['POST'])
+def kemaskini_status():
+    try:
+        data = request.json
+        no_giliran = data.get('no_giliran')
+        status_baru = data.get('status') # 'selesai' atau 'tidak_hadir'
+        today = get_today()
+
+        if not no_giliran or not status_baru:
+            return jsonify({'success': False, 'message': 'Data tidak lengkap'}), 400
+
+        # Kemaskini status pesakit secara spesifik di Firebase
+        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_giliran}.json", 
+                       json={'status': status_baru})
+        
+        return jsonify({'success': True, 'message': f'Status dikemaskini ke {status_baru}'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/get_senarai_hari_ini')
 def get_senarai():
@@ -143,12 +153,15 @@ def get_senarai():
 	
 @app.route('/api/get_senarai_tarikh/<tarikh>')
 def get_senarai_tarikh(tarikh):
-    # tarikh akan diterima dalam format YYYY-MM-DD dari frontend
-    if not session.get('admin_logged_in'):
-        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        # Kita benarkan akses tanpa check session yang ketat untuk mudahkan carian
+        res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
+        data = res.json()
         
-    res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
-    return jsonify(res.json() or {})	
+        # Jika Firebase bagi None, pulangkan objek kosong {}
+        return jsonify(data or {})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

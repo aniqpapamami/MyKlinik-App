@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - MyKlinik</title>
+    <!-- Bootstrap 5 & Icons -->
     <link href="https://jsdelivr.net" rel="stylesheet">
     <link rel="stylesheet" href="https://jsdelivr.net">
     <style>
         body { background: #f4f7f6; font-family: 'Inter', sans-serif; }
-        .stat-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn-panggil { font-size: 1.5rem; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .nav-admin { background: #1a2a6c; padding: 15px; color: white; }
+        .stat-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
         .section-container { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .nav-admin { background: #1a2a6c; padding: 15px; }
+        .btn-panggil { font-size: 1.5rem; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .badge-status { font-size: 0.85rem; padding: 5px 10px; }
     </style>
 </head>
 <body>
 
-<!-- Navigasi Admin -->
-<nav class="nav-admin text-white mb-4">
+<!-- Navigasi Utama -->
+<nav class="nav-admin shadow-sm mb-4">
     <div class="container d-flex justify-content-between align-items-center">
         <span class="h4 mb-0"><i class="bi bi-hospital"></i> MyKlinik Admin</span>
         <div>
@@ -28,69 +30,73 @@
 </nav>
 
 <div class="container">
-    <!-- Bahagian Utama: Kawalan Giliran -->
+    <!-- Bahagian 1: Kawalan Panggilan (Panggil Next) -->
     <div class="row g-4 mb-5">
         <div class="col-md-6">
-            <div class="card stat-card p-4 h-100 text-center">
-                <h6 class="text-muted">NOMBOR SEKARANG</h6>
+            <div class="card stat-card p-4 h-100 text-center bg-white">
+                <h6 class="text-muted fw-bold">NOMBOR SEKARANG</h6>
                 <h1 id="no-live" class="display-1 fw-bold text-primary">0</h1>
-                <button onclick="panggilNext()" class="btn btn-primary btn-panggil w-100 mt-3">
-                    <i class="bi bi-megaphone-fill"></i> PANGGIL NEXT
+                <button onclick="panggilNext()" class="btn btn-primary btn-panggil w-100 mt-3 shadow">
+                    <i class="bi bi-megaphone-fill"></i> PANGGIL SETERUSNYA
                 </button>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card stat-card p-4 h-100 text-center">
-                <h6 class="text-muted">JUMLAH PENDAFTAR HARI INI</h6>
+            <div class="card stat-card p-4 h-100 text-center bg-white border-start border-primary border-5">
+                <h6 class="text-muted fw-bold">JUMLAH PENDAFTAR HARI INI</h6>
                 <h1 id="total-daftar" class="display-3 fw-bold text-dark">0</h1>
-                <p class="text-secondary mt-2">Tarikh: <span id="current-date">---</span></p>
+                <p class="text-secondary mt-2">Tarikh: <span id="current-date" class="badge bg-light text-dark border">---</span></p>
             </div>
         </div>
     </div>
 
-    <!-- Bahagian 1: Senarai Live Hari Ini -->
+    <!-- Bahagian 2: Senarai Pesakit Hari Ini (Live) -->
     <div class="section-container">
-        <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-people-fill"></i> Senarai Pesakit Hari Ini</h4>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-primary m-0"><i class="bi bi-people-fill"></i> Senarai Pesakit Hari Ini</h4>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success">Auto-Update: ON</span>
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>No</th>
+                        <th>No Giliran</th>
                         <th>Nama Pesakit</th>
-                        <th>Masa</th>
+                        <th>Waktu Daftar</th>
                         <th>Status</th>
+                        <th class="text-center">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody id="senarai-hari-ini">
-                    <tr><td colspan="4" class="text-center">Memuatkan data...</td></tr>
+                    <tr><td colspan="5" class="text-center py-4">Memuatkan senarai pesakit...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Bahagian 2: Cari Rekod (Hanya Admin) -->
-    <div id="section-carian" class="section-container" style="border-top: 5px solid #ffc107;">
-        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-calendar-check"></i> Semak Rekod Arkib</h4>
+    <!-- Bahagian 3: Cari Rekod Arkib (Hanya Admin) -->
+    <div id="section-carian" class="section-container border-top border-warning border-5">
+        <h4 class="fw-bold mb-4"><i class="bi bi-calendar-event"></i> Semak Rekod Pesakit Lama</h4>
         <div class="row g-2 mb-4">
             <div class="col-md-8">
                 <input type="date" id="tarikh-cari" class="form-control form-control-lg">
             </div>
             <div class="col-md-4">
-                <button onclick="cariRekodLama()" class="btn btn-dark btn-lg w-100">Cari Rekod</button>
+                <button onclick="cariRekodLama()" class="btn btn-dark btn-lg w-100"><i class="bi bi-search"></i> Cari Rekod</button>
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="table-secondary">
+            <table class="table table-bordered align-middle">
+                <thead class="table-secondary text-center">
                     <tr>
-                        <th>No</th>
-                        <th>Nama Pesakit</th>
-                        <th>Waktu</th>
-                        <th>Status</th>
+                        <th width="10%">No</th>
+                        <th width="40%">Nama Pesakit</th>
+                        <th width="25%">Waktu Daftar</th>
+                        <th width="25%">Status</th>
                     </tr>
                 </thead>
                 <tbody id="hasil-carian-lama">
-                    <tr><td colspan="4" class="text-center text-muted">Sila pilih tarikh di atas.</td></tr>
+                    <tr><td colspan="4" class="text-center text-muted">Sila pilih tarikh dan klik butang Cari.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -98,22 +104,45 @@
 </div>
 
 <script>
-    // 1. Fungsi Panggil Nombor Seterusnya
+    // 1. FUNGSI PANGGIL NOMBOR SETERUSNYA
     function panggilNext() {
         fetch('/api/next', { method: 'POST' })
         .then(res => res.json())
         .then(data => {
-            if(!data.success) alert(data.message);
-            kemaskiniDataHarian();
+            if(!data.success) {
+                alert("Info: " + data.message);
+            }
+            kemaskiniDashboard(); // Refresh data selepas panggil
+        })
+        .catch(err => alert("Ralat sambungan pelayan."));
+    }
+
+    // 2. FUNGSI TUKAR STATUS (SELESAI / TAK HADIR)
+    function tukarStatus(no, statusBaru) {
+        let mesej = statusBaru === 'selesai' ? 'Selesaikan rawatan?' : 'Tanda sebagai Tidak Hadir?';
+        if(!confirm(`Adakah anda pasti untuk ${mesej} (No: ${no})`)) return;
+
+        fetch('/api/kemaskini_status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ no_giliran: no, status: statusBaru })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                kemaskiniDashboard();
+            } else {
+                alert("Gagal kemaskini: " + data.message);
+            }
         });
     }
 
-    // 2. Kemaskini Dashboard & Senarai Hari Ini (Auto-Update)
-    function kemaskiniDataHarian() {
-        const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
-        document.getElementById('current-date').innerText = hariIni;
+    // 3. FUNGSI KEMASKINI LIVE DATA
+    function kemaskiniDashboard() {
+        const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
+        document.getElementById('current-date').innerText = today;
 
-        // Ambil info nombor sekarang
+        // Ambil info status (No Sekarang & Jumlah)
         fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
@@ -122,47 +151,88 @@
         });
 
         // Ambil senarai pesakit hari ini
-        fetch(`/api/get_senarai_tarikh/${hariIni}`)
+        fetch(`/api/get_senarai_tarikh/${today}`)
         .then(res => res.json())
         .then(data => {
             const table = document.getElementById('senarai-hari-ini');
             table.innerHTML = '';
+            
             if(!data || Object.keys(data).length === 0) {
-                table.innerHTML = '<tr><td colspan="4" class="text-center">Tiada pendaftaran hari ini.</td></tr>';
+                table.innerHTML = '<tr><td colspan="5" class="text-center py-4">Tiada pendaftaran untuk hari ini.</td></tr>';
                 return;
             }
-            Object.keys(data).sort((a,b) => b-a).forEach(key => {
+
+            // Susun: Yang terbaru daftar berada di bawah (ikut turutan nombor giliran)
+            Object.keys(data).sort((a,b) => a-b).forEach(key => {
                 const p = data[key];
-                table.innerHTML += `<tr><td><b>${p.no_giliran}</b></td><td>${p.nama}</td><td>${p.masa}</td><td><span class="badge ${p.status === 'menunggu' ? 'bg-warning text-dark' : 'bg-success'}">${p.status}</span></td></tr>`;
+                
+                // Logik butang tindakan (Hanya muncul jika belum Selesai/Tak Hadir)
+                let butang = '';
+                if(p.status !== 'selesai' && p.status !== 'tidak_hadir') {
+                    butang = `
+                        <div class="text-center">
+                            <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">
+                                <i class="bi bi-check-lg"></i> Selesai
+                            </button>
+                            <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">
+                                <i class="bi bi-x-lg"></i> Tak Hadir
+                            </button>
+                        </div>
+                    `;
+                }
+
+                // Warna Badge
+                let badgeClass = 'bg-warning text-dark';
+                if(p.status === 'selesai') badgeClass = 'bg-secondary';
+                if(p.status === 'tidak_hadir') badgeClass = 'bg-dark';
+                if(p.status === 'sedang_dirawat') badgeClass = 'bg-info text-dark';
+
+                table.innerHTML += `
+                    <tr>
+                        <td class="text-center"><span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px; height:35px">${p.no_giliran}</span></td>
+                        <td class="fw-bold">${p.nama}</td>
+                        <td>${p.masa}</td>
+                        <td><span class="badge ${badgeClass} badge-status">${p.status.toUpperCase()}</span></td>
+                        <td>${butang}</td>
+                    </tr>
+                `;
             });
         });
     }
 
-    // 3. Fungsi Carian Rekod Arkib
+    // 4. FUNGSI CARI REKOD LAMA
     function cariRekodLama() {
         const t = document.getElementById('tarikh-cari').value;
-        if(!t) return alert("Pilih tarikh!");
+        if(!t) return alert("Sila pilih tarikh terlebih dahulu!");
 
         const tableHasil = document.getElementById('hasil-carian-lama');
-        tableHasil.innerHTML = '<tr><td colspan="4" class="text-center">Mencari...</td></tr>';
+        tableHasil.innerHTML = '<tr><td colspan="4" class="text-center py-3">Mencari data...</td></tr>';
 
         fetch(`/api/get_senarai_tarikh/${t}`)
         .then(res => res.json())
         .then(data => {
             tableHasil.innerHTML = '';
             if(!data || Object.keys(data).length === 0 || data.error) {
-                tableHasil.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Tiada rekod pada tarikh tersebut.</td></tr>';
+                tableHasil.innerHTML = '<tr><td colspan="4" class="text-center text-danger py-3">Tiada rekod pada tarikh ' + t + '</td></tr>';
                 return;
             }
-            Object.keys(data).forEach(k => {
+            Object.keys(data).sort((a,b) => a-b).forEach(k => {
                 const p = data[k];
-                tableHasil.innerHTML += `<tr><td>${p.no_giliran}</td><td>${p.nama}</td><td>${p.masa}</td><td>${p.status}</td></tr>`;
+                tableHasil.innerHTML += `
+                    <tr>
+                        <td class="text-center">${p.no_giliran}</td>
+                        <td>${p.nama}</td>
+                        <td class="text-center">${p.masa}</td>
+                        <td class="text-center"><span class="badge bg-outline-secondary text-dark border p-1">${p.status.toUpperCase()}</span></td>
+                    </tr>
+                `;
             });
         });
     }
 
-    setInterval(kemaskiniDataHarian, 5000); // Update setiap 5 saat
-    kemaskiniDataHarian();
+    // Jalankan kemaskini automatik setiap 5 saat
+    setInterval(kemaskiniDashboard, 5000);
+    kemaskiniDashboard(); // Jalankan terus bila page buka
 </script>
 
 </body>
