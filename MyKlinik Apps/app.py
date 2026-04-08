@@ -113,5 +113,25 @@ def kemaskini_status():
 def get_senarai_tarikh(tarikh):
     res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
     return jsonify(res.json() or {})
+	
+	@app.route('/api/padam_pesakit', methods=['POST'])
+def padam_pesakit():
+    try:
+        data = request.json
+        no = data.get('no_giliran')
+        today = get_today()
+        
+        if not no:
+            return jsonify({'success': False, 'message': 'Nombor giliran tidak dikesan'}), 400
+
+        # Padam rekod pesakit tersebut sahaja di Firebase
+        res = requests.delete(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json")
+        
+        if res.status_code == 200:
+            return jsonify({'success': True, 'message': f'Pesakit No {no} telah dipadam.'})
+        else:
+            return jsonify({'success': False, 'message': 'Gagal memadam dari Firebase'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True)
