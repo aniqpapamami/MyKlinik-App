@@ -1,6 +1,6 @@
 import requests
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from datetime import datetime
+from datetime import datetime,timedelta
 import os
 
 app = Flask(__name__)
@@ -54,26 +54,26 @@ def api_daftar():
             return jsonify({'error': 'Data tidak lengkap'}), 400
             
         today = get_today()
+        waktu_sekarang = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
         
-        # 1. Ambil jumlah (Guna .json di hujung URL)
+        # 1. Ambil jumlah pendaftar hari ini
         res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
         jumlah = res_total.json()
         no_baru = (jumlah if jumlah is not None else 0) + 1
         
-        # 2. Simpan data (Gunakan PUT)
+        # 2. Kemaskini jumlah besar di Firebase
         requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
         
         # 3. Simpan butiran pesakit
-        waktu = (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
         requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
             'nama': data.get('nama'),
             'no_hp': data.get('no_hp'),
             'no_giliran': no_baru,
             'status': 'menunggu',
-            'masa': waktu
+            'masa': waktu_sekarang
         })
 
-        # 4. Pastikan nombor_sekarang ada
+        # 4. Pastikan nombor_sekarang ada (Set 0 jika hari baru)
         res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
         if res_now.json() is None:
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
@@ -81,8 +81,8 @@ def api_daftar():
         return jsonify({'no_giliran': no_baru, 'nama': data.get('nama')})
         
     except Exception as e:
-        print(f"Ralat Daftar: {e}") # Tengok ralat ni di Render Logs
-        return jsonify({'error': 'Gagal mendaftar di server'}), 500
+        print(f"Ralat Daftar: {e}") 
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/status_live')
 def status_live():
