@@ -98,69 +98,59 @@ def api_daftar():
         print("Error daftar:", e)
         return jsonify({'success': False, 'message': 'Ralat semasa mendaftar'}), 500
 
-
 @app.route('/api/status_live')
 def status_live():
-    today = get_today()
-    reset_harian_jika_perlu(today)
-    
-    try:
-        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-
-        return jsonify({
-            'nombor_sekarang': res_now.json() or 0,
-            'jumlah_giliran': res_total.json() or 0
-        })
-    except:
-        return jsonify({'nombor_sekarang': 0, 'jumlah_giliran': 0})
-
-
+    today = get_today()
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+    return jsonify({
+        'nombor_sekarang': res_now.json() or 0,
+        'jumlah_giliran': res_total.json() or 0
+    })
 @app.route('/api/next', methods=['POST'])
 def api_next():
-    today = get_today()
-    reset_harian_jika_perlu(today)
-
-    try:
-        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
-
-        no_skrg = res_now.json() or 0
-        total = res_total.json() or 0
-
-        if no_skrg >= total:
-            return jsonify({'success': False, 'message': 'Tiada pesakit menunggu lagi.'})
-
-        no_baru = no_skrg + 1
-        requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
-        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", 
-                      json={'status': 'sedang_dirawat'})
-
-        return jsonify({'success': True})
-
-    except Exception as e:
-        print("Error next:", e)
-        return jsonify({'success': False, 'message': 'Ralat memanggil nombor'}), 500
-
-
+    today = get_today()
+    res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
+    res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+   
+    no_skrg = res_now.json() or 0
+    total = res_total.json() or 0
+   
+    if no_skrg >= total:
+        return jsonify({'success': False, 'message': 'Tiada pesakit lagi.'})
+    no_baru = no_skrg + 1
+    requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={'status': 'sedang_dirawat'})
+    return jsonify({'success': True, 'no': no_baru})
 @app.route('/api/kemaskini_status', methods=['POST'])
 def kemaskini_status():
-    try:
-        data = request.get_json()
-        today = get_today()
-        no = data.get('no_giliran')
-        status = data.get('status')
-
-        if not no or status not in ['selesai', 'tidak_hadir']:
-            return jsonify({'success': False, 'message': 'Data tidak sah'}), 400
-
-        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", 
-                       json={'status': status})
-        return jsonify({'success': True})
-
-    except Exception as e:
-        print("Error kemaskini status:", e)
-        return jsonify({'success': False, 'message': 'Ralat kemaskini status'}), 500
+    data = request.json
+    today = get_today()
+    requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{data['no_giliran']}.json",
+                   json={'status': data['status']})
+    return jsonify({'success': True})
+@app.route('/api/get_senarai_tarikh/<tarikh>')
+def get_senarai_tarikh(tarikh):
+    res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
+    return jsonify(res.json() or {})
+@app.route('/api/padam_pesakit', methods=['POST'])
+def padam_pesakit():
+    try:
+        data = request.json
+        no = data.get('no_giliran')
+        today = get_today()
+       
+        if not no:
+            return jsonify({'success': False, 'message': 'Nombor giliran tidak dikesan'}), 400
+        # Padam rekod pesakit tersebut sahaja di Firebase
+        res = requests.delete(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json")
+       
+        if res.status_code == 200:
+            return jsonify({'success': True, 'message': f'Pesakit No {no} telah dipadam.'})
+        else:
+            return jsonify({'success': False, 'message': 'Gagal memadam dari Firebase'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 # ==================== FUNGSI PALING PENTING ====================
