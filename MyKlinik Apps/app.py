@@ -1,22 +1,31 @@
 import requests
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, timedelta
-import os
 
 app = Flask(__name__)
-app.secret_key = "klinik_rahsia_123"   # Tukar kepada password yang lebih kuat di production
+app.secret_key = "klinik_rahsia_123"
 
-# === URL FIREBASE ANDA ===
 BASE_URL = "https://myklinik-queue-line-system-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
 def get_today():
-    """Dapatkan tarikh Malaysia (UTC+8)"""
     return (datetime.now() + timedelta(hours=8)).strftime('%Y-%m-%d')
 
 def get_current_time():
     return (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
 
-# ==================== ROUTES UTAMA ====================
+def reset_harian_jika_perlu(today):
+    """Reset nombor hanya jika tiada pesakit langsung"""
+    try:
+        res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
+        data = res.json()
+        if not data or len([v for v in data.values() if v]) == 0:
+            requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=0)
+            requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
+            print(f"[RESET] Hari {today} telah direset kerana tiada pesakit.")
+    except:
+        pass
+
+# ==================== ROUTES ====================
 
 @app.route('/')
 def index():
@@ -30,20 +39,14 @@ def daftar():
 def monitor():
     return render_template('monitor.html')
 
-# ==================== ADMIN ====================
-
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        if username == "admin" and password == "klinik123":
+        if request.form.get('username') == "admin" and request.form.get('password') == "klinik123":
             session['admin_logged_in'] = True
             return redirect('/dashboard')
         else:
             return redirect('/admin/login?error=1')
-    
     return render_template('admin_login.html')
 
 @app.route('/dashboard')
@@ -66,14 +69,13 @@ def api_daftar():
         today = get_today()
         waktu = get_current_time()
 
-        # Dapatkan nombor giliran seterusnya
+        reset_harian_jika_perlu(today)
+
         res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
         no_baru = (res.json() or 0) + 1
 
-        # Simpan jumlah giliran
         requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
 
-        # Simpan data pesakit
         requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
             'nama': data.get('nama'),
             'no_ic': data.get('no_ic'),
@@ -83,16 +85,10 @@ def api_daftar():
             'masa': waktu
         })
 
-        # Pastikan nombor_sekarang wujud (untuk hari baru)
-        res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
-        if res_now.json() is None:
+        if requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json").json() is None:
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
 
-        return jsonify({
-            'success': True,
-            'no_giliran': no_baru,
-            'nama': data.get('nama')
-        })
+        return jsonify({'success': True, 'no_giliran': no_baru, 'nama': data.get('nama')})
 
     except Exception as e:
         print("Error daftar:", e)
@@ -102,6 +98,8 @@ def api_daftar():
 @app.route('/api/status_live')
 def status_live():
     today = get_today()
+    reset_harian_jika_perlu(today)
+
     try:
         res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
         res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
@@ -117,6 +115,8 @@ def status_live():
 @app.route('/api/next', methods=['POST'])
 def api_next():
     today = get_today()
+    reset_harian_jika_perlu(today)
+
     try:
         res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
         res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
@@ -128,11 +128,7 @@ def api_next():
             return jsonify({'success': False, 'message': 'Tiada pesakit menunggu lagi.'})
 
         no_baru = no_skrg + 1
-
-        # Update nombor sekarang
         requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=no_baru)
-        
-        # Update status pesakit tersebut
         requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", 
                       json={'status': 'sedang_dirawat'})
 
@@ -140,7 +136,7 @@ def api_next():
 
     except Exception as e:
         print("Error next:", e)
-        return jsonify({'success': False, 'message': 'Ralat panggil nombor'}), 500
+        return jsonify({'success': False, 'message': 'Ralat memanggil nombor'}), 500
 
 
 @app.route('/api/kemaskini_status', methods=['POST'])
@@ -148,15 +144,14 @@ def kemaskini_status():
     try:
         data = request.get_json()
         today = get_today()
-        no_giliran = data.get('no_giliran')
+        no = data.get('no_giliran')
         status = data.get('status')
 
-        if not no_giliran or status not in ['selesai', 'tidak_hadir']:
+        if not no or status not in ['selesai', 'tidak_hadir']:
             return jsonify({'success': False, 'message': 'Data tidak sah'}), 400
 
-        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_giliran}.json",
+        requests.patch(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no}.json", 
                        json={'status': status})
-
         return jsonify({'success': True})
 
     except Exception as e:
@@ -169,14 +164,11 @@ def get_senarai_tarikh(tarikh):
     try:
         res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
         data = res.json() or {}
-        
-        # Pastikan return list (bukan object) supaya frontend tak error
+
         if isinstance(data, dict):
-            senarai = list(data.values())
-            # Filter None
-            senarai = [item for item in senarai if item is not None]
+            senarai = [item for item in data.values() if item is not None]
+            senarai.sort(key=lambda x: x.get('no_giliran', 0))
             return jsonify(senarai)
-        
         return jsonify([])
     except Exception as e:
         print("Error get senarai:", e)
@@ -185,4 +177,4 @@ def get_senarai_tarikh(tarikh):
 
 # ==================== RUN ====================
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
