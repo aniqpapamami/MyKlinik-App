@@ -185,88 +185,59 @@ function lihatDetail(p) {
     modal.show();
 }
 
-// Fungsi utama kemaskini data (dipanggil setiap 5 saat)
+// Kemaskini Senarai Hari Ini
 function kemaskiniDataHarian() {
-    const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+    const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
     document.getElementById('current-date').innerText = hariIni;
 
-    // 1. Fetch status live (Ringkasan Nombor)
-    fetch('/api/status_live')
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('no-live').innerText = data.nombor_sekarang || 0;
-            document.getElementById('total-daftar').innerText = data.jumlah_giliran || 0;
-        })
-        .catch(err => console.error("❌ Error status_live:", err));
-
-    // 2. Fetch senarai pesakit
     fetch(`/api/get_senarai_tarikh/${hariIni}`)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('senarai-hari-ini');
-            
-            // Pastikan data adalah array dan tidak kosong
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tiada pendaftaran untuk hari ini.</td></tr>';
+            tbody.innerHTML = '';
+
+            const senarai = Array.isArray(data) ? data.filter(item => item != null) : [];
+
+            if (senarai.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Tiada pendaftaran hari ini.</td></tr>`;
                 return;
             }
 
-            let htmlContent = ''; // Kumpul HTML di sini
-
-            data.forEach(p => {
-                if (!p) return; // Skip jika data null
-
-                let butang = '';
-                // Hanya tunjuk butang jika status bukan selesai/tidak hadir
+            senarai.sort((a,b) => (a.no_giliran||0) - (b.no_giliran||0)).forEach(p => {
+                let tindakan = '';
                 if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
-                    butang = `
-                        <div class="text-center">
-                            <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">
-                                <i class="bi bi-check-lg"></i> Selesai
-                            </button>
-                            <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">
-                                <i class="bi bi-x-lg"></i> Tak Hadir
-                            </button>
-                        </div>
+                    tindakan = `
+                        <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">Selesai</button>
+                        <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">Tak Hadir</button>
                     `;
                 }
 
-                let badgeClass = 'bg-warning text-dark';
-                if (p.status === 'selesai') badgeClass = 'bg-secondary';
-                if (p.status === 'tidak_hadir') badgeClass = 'bg-dark';
-                if (p.status === 'sedang_dirawat') badgeClass = 'bg-info text-dark';
+                const btnDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>`;
 
-                htmlContent += `
+                let badge = 'bg-warning text-dark';
+                if (p.status === 'selesai') badge = 'bg-secondary';
+                if (p.status === 'tidak_hadir') badge = 'bg-dark';
+                if (p.status === 'sedang_dirawat') badge = 'bg-info';
+
+                tbody.innerHTML += `
                     <tr>
-                        <td class="text-center">
-                            <span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px; height:35px">
-                                ${p.no_giliran}
-                            </span>
-                        </td>
-                        <td class="fw-bold">${p.nama}</td>
-                        <td>${p.masa}</td>
-                        <td><span class="badge ${badgeClass}">${p.status.toUpperCase()}</span></td>
-                        <td>${butang}</td>
+                        <td class="text-center fw-bold">${p.no_giliran}</td>
+                        <td>${p.nama}</td>
+                        <td>${p.no_ic || '-'}</td>
+                        <td>${p.no_hp || '-'}</td>
+                        <td>${p.masa || '-'}</td>
+                        <td><span class="badge ${badge}">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td class="text-center">${tindakan} ${btnDetail}</td>
                     </tr>
                 `;
             });
-
-            tbody.innerHTML = htmlContent; // Kemaskini sekali gus
-        })
-        .catch(err => {
-            console.error("❌ Error fetch senarai:", err);
-            document.getElementById('senarai-hari-ini').innerHTML = 
-                `<tr><td colspan="5" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`;
         });
 }
 
 // Carian Rekod Lama
 function cariRekodLama() {
     const tarikh = document.getElementById('tarikh-cari').value;
-    if (!tarikh) {
-        alert("Sila pilih tarikh terlebih dahulu!");
-        return;
-    }
+    if (!tarikh) return alert("Sila pilih tarikh!");
 
     const tbody = document.getElementById('hasil-carian-lama');
     tbody.innerHTML = '<tr><td colspan="7" class="text-center">Mencari...</td></tr>';
@@ -274,11 +245,10 @@ function cariRekodLama() {
     fetch(`/api/get_senarai_tarikh/${tarikh}`)
         .then(res => res.json())
         .then(data => {
-            console.log("✅ Data carian lama:", data);
             tbody.innerHTML = '';
             const senarai = Array.isArray(data) ? data.filter(item => item != null) : [];
 
-            if (!data || Object.keys(data).length === 0) {
+            if (senarai.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Tiada rekod pada tarikh ini.</td></tr>`;
                 return;
             }
