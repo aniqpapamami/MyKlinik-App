@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Giliran - MyKlinik</title>
-    <!-- Guna Bootstrap via CDN -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <style>
-        body { 
-            background-color: #f0f2f5; 
-            font-family: 'Arial', sans-serif;
+        body {
+            background: #0f172a;
+            color: white;
+            font-family: 'Inter', system-ui, sans-serif;
             height: 100vh;
             margin: 0;
             overflow: hidden;
@@ -18,101 +23,116 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 30px;
         }
-        .header-section {
+        .header {
             text-align: center;
             margin-bottom: 20px;
         }
         .digital-clock {
-            font-size: 5rem;
-            font-weight: 800;
-            color: #1a2a6c;
-            font-family: 'Courier New', Courier, monospace;
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            letter-spacing: 4px;
         }
         .main-card {
             background: white;
+            color: #1e2937;
             border-radius: 30px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
-            flex-grow: 1; /* Biar dia ambil ruang tengah */
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            flex: 1;
             display: flex;
-            align-items: stretch;
             overflow: hidden;
-            margin-bottom: 60px; /* Ruang untuk running text */
         }
-        .number-box {
+        .number-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            border-right: 3px solid #f0f0f0;
-            padding: 20px;
-        }
-        .info-box {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            background: linear-gradient(135deg, #1e2937, #334155);
+            color: white;
             padding: 40px;
-            background: #fafafa;
+        }
+        .info-section {
+            flex: 1;
+            padding: 40px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .number-display {
-            font-size: 18rem;
+            font-size: 16rem;
             font-weight: 900;
-            color: #e74c3c;
             line-height: 1;
+            color: #ef4444;
+            text-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
+            transition: all 0.6s ease;
         }
-        .ad-content {
-            font-size: 2.5rem;
-            color: #34495e;
-            text-align: center;
-            font-weight: bold;
+        .number-changed {
+            transform: scale(1.08);
+            color: #f59e0b;
+        }
+        .label {
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            opacity: 0.9;
         }
         .running-text {
-            background: #1a2a6c;
-            color: white;
-            padding: 12px 0;
+            background: #1e2937;
+            color: #e0f2fe;
+            padding: 15px 0;
+            font-size: 1.6rem;
+            font-weight: 500;
             position: fixed;
             bottom: 0;
             width: 100%;
-            font-size: 1.5rem;
             z-index: 1000;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .running-text marquee {
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
 
 <div class="monitor-container">
-    <div class="header-section">
+    
+    <!-- Header: Jam & Tarikh -->
+    <div class="header">
         <div id="jam-digital" class="digital-clock">00:00:00</div>
-        <div id="tarikh-hari-ini" class="fs-3 text-secondary">---</div>
+        <div id="tarikh-hari-ini" class="fs-3 mt-2 text-light"></div>
     </div>
 
+    <!-- Main Content -->
     <div class="main-card">
-        <!-- Bahagian Kiri: Nombor -->
-        <div class="number-box">
-            <h2 class="text-primary fw-bold display-4">NOMBOR SEKARANG</h2>
+        
+        <!-- Bahagian Nombor Giliran -->
+        <div class="number-section">
+            <h2 class="label mb-3">NOMBOR SEKARANG</h2>
             <div id="no-live" class="number-display">0</div>
-            <p class="text-muted fs-3">Sila masuk ke Bilik Rawatan</p>
+            <p class="mt-4 fs-3 fw-bold text-warning">Sila masuk ke kaunter rawatan</p>
         </div>
 
-        <!-- Bahagian Kanan: Iklan/Carousel -->
-        <div class="info-box">
-            <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel">
+        <!-- Bahagian Info & Iklan -->
+        <div class="info-section">
+            <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
                 <div class="carousel-inner">
-                    <div class="carousel-item active" data-bs-interval="5000">
-                        <h1 class="text-success fw-bold mb-4">INFO KLINIK</h1>
-                        <p class="ad-content">Sila sediakan MyKad atau Dokumen Pengenalan Diri anda.</p>
+                    <div class="carousel-item active">
+                        <h1 class="text-primary fw-bold mb-4 text-center">SELAMAT DATANG</h1>
+                        <p class="ad-content fs-4 text-center">Sila sediakan MyKad atau dokumen pengenalan anda semasa dipanggil.</p>
                     </div>
-                    <div class="carousel-item" data-bs-interval="5000">
-                        <h1 class="text-primary fw-bold mb-4">KESIHATAN</h1>
-                        <p class="ad-content">Sentiasa amalkan cuci tangan dan pakai pelitup muka.</p>
+                    <div class="carousel-item">
+                        <h1 class="text-success fw-bold mb-4 text-center">INFO PENTING</h1>
+                        <p class="ad-content fs-4 text-center">Amalkan cuci tangan dan pakai pelitup muka di kawasan klinik.</p>
                     </div>
-                    <div class="carousel-item" data-bs-interval="5000">
-                        <h1 class="text-danger fw-bold mb-4">WAKTU OPERASI</h1>
-                        <p class="ad-content">8:00 AM - 10:00 PM<br>(Setiap Hari Bekerja)</p>
+                    <div class="carousel-item">
+                        <h1 class="text-danger fw-bold mb-4 text-center">WAKTU OPERASI</h1>
+                        <p class="ad-content fs-4 text-center">Isnin – Jumaat: 8:00 pagi – 10:00 malam<br>Sabtu & Ahad: 9:00 pagi – 5:00 petang</p>
                     </div>
                 </div>
             </div>
@@ -120,45 +140,79 @@
     </div>
 </div>
 
+<!-- Running Text -->
 <div class="running-text">
-    <marquee scrollamount="10">
-        Selamat Datang ke MyKlinik. Sila bersabar menanti giliran anda. Keselesaan anda adalah keutamaan kami.
+    <marquee scrollamount="8">
+        ★ Selamat Datang ke MyKlinik ★ Sila bersabar menanti giliran anda ★ Keselesaan anda adalah keutamaan kami ★ Terima kasih kerana memilih MyKlinik ★
     </marquee>
 </div>
 
-<!-- Link JS Bootstrap (Paling Penting untuk Carousel Bergerak) -->
-<script src="https://jsdelivr.net"></script>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function kemaskiniMasa() {
-        const sekarang = new Date();
-        const jam = sekarang.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Kuala_Lumpur' });
-        const tarikh = sekarang.toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' });
-        document.getElementById('jam-digital').innerText = jam;
-        document.getElementById('tarikh-hari-ini').innerText = tarikh;
-    }
+// ==================== JAM & TARIKH ====================
+function kemaskiniMasa() {
+    const sekarang = new Date();
+    
+    const jam = sekarang.toLocaleTimeString('en-GB', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur' 
+    });
+    
+    const tarikh = sekarang.toLocaleDateString('ms-MY', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric',
+        timeZone: 'Asia/Kuala_Lumpur' 
+    });
 
-    function kemaskiniNombor() {
-        fetch('/api/status_live')
-            .then(res => res.json())
-            .then(data => {
-                const noSekarang = data.nombor_sekarang || 0;
-                const elementNo = document.getElementById('no-live');
-                if (elementNo.innerText != noSekarang) {
-                    elementNo.innerText = noSekarang;
-                    if(noSekarang > 0) {
-                        let msg = new SpeechSynthesisUtterance("Nombor " + noSekarang + ", sila masuk.");
-                        msg.lang = 'ms-MY';
-                        window.speechSynthesis.speak(msg);
-                    }
+    document.getElementById('jam-digital').innerText = jam;
+    document.getElementById('tarikh-hari-ini').innerText = tarikh;
+}
+
+// ==================== NOMBOR GILIRAN ====================
+let nomborSebelum = 0;
+
+function kemaskiniNombor() {
+    fetch('/api/status_live')
+        .then(res => res.json())
+        .then(data => {
+            const nomborBaru = parseInt(data.nombor_sekarang) || 0;
+            const el = document.getElementById('no-live');
+
+            if (nomborBaru !== nomborSebelum) {
+                // Efek animasi bila nombor berubah
+                el.classList.add('number-changed');
+                setTimeout(() => el.classList.remove('number-changed'), 800);
+
+                el.innerText = nomborBaru;
+
+                // Panggil suara (hanya bila nombor bertambah)
+                if (nomborBaru > nomborSebelum && nomborBaru > 0) {
+                    const utterance = new SpeechSynthesisUtterance(`Nombor ${nomborBaru}, sila masuk ke kaunter rawatan.`);
+                    utterance.lang = 'ms-MY';
+                    utterance.rate = 0.95;
+                    window.speechSynthesis.speak(utterance);
                 }
-            });
-    }
 
-    setInterval(kemaskiniMasa, 1000);
-    setInterval(kemaskiniNombor, 3000);
-    kemaskiniMasa();
-    kemaskiniNombor();
+                nomborSebelum = nomborBaru;
+            }
+        })
+        .catch(err => console.error("Gagal ambil nombor:", err));
+}
+
+// ==================== JALANKAN SEMUA ====================
+setInterval(kemaskiniMasa, 1000);
+setInterval(kemaskiniNombor, 2500);   // Lebih laju dari sebelum ni
+
+// Jalankan sekali bila page load
+kemaskiniMasa();
+kemaskiniNombor();
 </script>
+
 </body>
 </html>
