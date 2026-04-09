@@ -107,8 +107,22 @@ function kemaskiniStatusPesakit() {
     fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
-            const baki = parseInt(noSaya) - parseInt(data.nombor_sekarang || 0);
+            const noSekarang = parseInt(data.nombor_sekarang || 0);
+            const totalDaftar = parseInt(data.jumlah_giliran || 0);
+            const noSyaInt = parseInt(noSaya);
 
+            // LOGIK DELETE MEMORY: 
+            // Jika nombor saya lebih besar dari jumlah pendaftar di server, 
+            // bermakna database telah di-reset atau data saya telah dibuang.
+            if (noSyaInt > totalDaftar && totalDaftar !== undefined) {
+                console.log("Data di server telah di-reset. Memadam memori tempatan...");
+                localStorage.removeItem('no_saya');
+                localStorage.removeItem('nama_saya');
+                location.reload(); // Refresh untuk tunjuk borang daftar semula
+                return;
+            }
+
+            const baki = noSyaInt - noSekarang;
             const elBaki = document.getElementById('baki-orang');
             const elPesan = document.getElementById('pesan-status');
 
@@ -119,23 +133,17 @@ function kemaskiniStatusPesakit() {
                 elBaki.innerHTML = `TINGGAL <strong>${baki}</strong> ORANG LAGI!`;
                 elBaki.classList.add('text-danger', 'blink');
                 elPesan.innerText = "Sila bersiap untuk masuk";
-                
-                // Suara amaran
-                if (baki <= 3) {
-                    let msg = new SpeechSynthesisUtterance(`Nombor ${noSaya}, tinggal ${baki} orang lagi. Sila bersiap.`);
-                    msg.lang = 'ms-MY';
-                    window.speechSynthesis.speak(msg);
-                }
+                // ... (suara amaran anda)
             } else if (baki === 0) {
                 elBaki.innerHTML = `<span class="text-success">GILIRAN ANDA SEKARANG!</span>`;
                 elPesan.innerText = "Sila masuk ke kaunter rawatan";
+            } else {
+                // Jika baki negatif (nombor sudah lepas/selesai)
+                elBaki.innerHTML = `<span class="text-muted">Giliran anda telah selesai.</span>`;
+                elPesan.innerText = "Terima kasih.";
+                // Pilihan: Boleh tambah butang "Daftar Semula" yang panggil localStorage.clear()
             }
         });
-}
-
-setInterval(kemaskiniStatusPesakit, 4000);
-if (localStorage.getItem('no_saya')) {
-    tampilStatus(localStorage.getItem('no_saya'), localStorage.getItem('nama_saya'));
 }
 </script>
 </body>
