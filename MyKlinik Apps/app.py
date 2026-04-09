@@ -69,39 +69,34 @@ def logout():
 def api_daftar():
     try:
         data = request.get_json()
-        nama = data.get('nama')
-        if not nama:
-            return jsonify({'success': False, 'message': 'Nama diperlukan'}), 400
-
         today = get_today()
-        # Ambil semua data harian dalam satu request untuk speed
-        res_harian = requests.get(f"{BASE_URL}/harian/{today}.json").json() or {}
+        waktu = get_current_time()
+
+        reset_harian_jika_perlu(today)
+
+        res = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
+        no_baru = (res.json() or 0) + 1
+
+        requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=no_baru)
+
+        requests.put(f"{BASE_URL}/harian/{today}/senarai_pesakit/{no_baru}.json", json={
+            'nama': data.get('nama'),
+            'no_ic': data.get('no_ic'),
+            'no_hp': data.get('no_hp'),
+            'no_giliran': no_baru,
+            'status': 'menunggu',
+            'masa': waktu
+        })
         
-        no_baru = (res_harian.get('jumlah_giliran') or 0) + 1
+        # Pastikan nombor_sekarang wujud
+        if requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json").json() is None:
+            requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
 
-        # Update serentak (Atomic-like update)
-        payload = {
-            f"jumlah_giliran": no_baru,
-            f"senarai_pesakit/{no_baru}": {
-                'nama': nama,
-                'no_ic': data.get('no_ic'),
-                'no_hp': data.get('no_hp'),
-                'no_giliran': no_baru,
-                'status': 'menunggu',
-                'masa': get_current_time()
-            }
-        }
-        
-        # Jika nombor_sekarang belum ada, set ke 0
-        if res_harian.get('nombor_sekarang') is None:
-            payload['nombor_sekarang'] = 0
+        return jsonify({'success': True, 'no_giliran': no_baru, 'nama': data.get('nama')})
 
-        requests.patch(f"{BASE_URL}/harian/{today}.json", json=payload)
-
-        return jsonify({'success': True, 'no_giliran': no_baru, 'nama': nama})
     except Exception as e:
-        print(f"Error daftar: {e}")
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print("Error daftar:", e)
+        return jsonify({'success': False, 'message': 'Ralat semasa mendaftar'}), 500
 
 
 @app.route('/api/status_live')
@@ -173,32 +168,19 @@ def kemaskini_status():
 def get_senarai_tarikh(tarikh):
     try:
         res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
-        raw_data = res.json()
+        data = res.json() or {}
 
-        print(f"[DEBUG] Tarikh {tarikh} → Raw data dari Firebase: {type(raw_data)} → {raw_data}")
-
-        if not raw_data:
-            print(f"[DEBUG] Tiada data untuk tarikh {tarikh}")
-            return jsonify([])
-
-        # Tukar object Firebase kepada array dengan selamat
-        senarai = []
-        if isinstance(raw_data, dict):
-            for key, value in raw_data.items():
-                if isinstance(value, dict) and value.get('no_giliran') is not None:
-                    senarai.append(value)
-
-        # Susun mengikut nombor giliran
-        senarai.sort(key=lambda x: int(x.get('no_giliran', 0)))
-
-        print(f"[DEBUG] Berjaya ditukar ke array → {len(senarai)} rekod")
-
-        return jsonify(senarai)
-
-    except Exception as e:
-        print(f"[ERROR] get_senarai_tarikh {tarikh}:", str(e))
+        # Tukar object Firebase kepada array (penting untuk dashboard)
+        if isinstance(data, dict):
+            senarai = [item for item in data.values() if item is not None]
+            # Susun mengikut no_giliran
+            senarai.sort(key=lambda x: x.get('no_giliran', 0))
+            return jsonify(senarai)
+        
         return jsonify([])
-
+    except Exception as e:
+        print("Error get senarai:", e)
+        return jsonify([])
 
 if __name__ == '__main__':
     app.run(debug=True)
