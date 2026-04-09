@@ -13,15 +13,18 @@ def get_today():
 def get_current_time():
     return (datetime.now() + timedelta(hours=8)).strftime('%H:%M:%S')
 
+# ==================== HELPER ====================
 def reset_harian_jika_perlu(today):
-    """Reset nombor hanya jika tiada pesakit langsung"""
+    """Reset hanya jika benar-benar tiada pesakit"""
     try:
         res = requests.get(f"{BASE_URL}/harian/{today}/senarai_pesakit.json")
         data = res.json()
-        if not data or len([v for v in data.values() if v]) == 0:
+        
+        # Jika tiada data atau semua nilai None
+        if not data or all(v is None for v in data.values()):
             requests.put(f"{BASE_URL}/harian/{today}/jumlah_giliran.json", json=0)
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
-            print(f"[RESET] Hari {today} telah direset kerana tiada pesakit.")
+            print(f"[RESET] Hari {today} telah direset.")
     except:
         pass
 
@@ -85,6 +88,7 @@ def api_daftar():
             'masa': waktu
         })
 
+        # Pastikan nombor_sekarang wujud
         if requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json").json() is None:
             requests.put(f"{BASE_URL}/harian/{today}/nombor_sekarang.json", json=0)
 
@@ -99,7 +103,7 @@ def api_daftar():
 def status_live():
     today = get_today()
     reset_harian_jika_perlu(today)
-
+    
     try:
         res_now = requests.get(f"{BASE_URL}/harian/{today}/nombor_sekarang.json")
         res_total = requests.get(f"{BASE_URL}/harian/{today}/jumlah_giliran.json")
@@ -159,22 +163,37 @@ def kemaskini_status():
         return jsonify({'success': False, 'message': 'Ralat kemaskini status'}), 500
 
 
+# ==================== FUNGSI PALING PENTING ====================
 @app.route('/api/get_senarai_tarikh/<tarikh>')
 def get_senarai_tarikh(tarikh):
     try:
         res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
-        data = res.json() or {}
+        raw_data = res.json()
 
-        if isinstance(data, dict):
-            senarai = [item for item in data.values() if item is not None]
-            senarai.sort(key=lambda x: x.get('no_giliran', 0))
-            return jsonify(senarai)
-        return jsonify([])
+        print(f"[DEBUG] Tarikh {tarikh} → Raw data dari Firebase: {type(raw_data)} → {raw_data}")
+
+        if not raw_data:
+            print(f"[DEBUG] Tiada data untuk tarikh {tarikh}")
+            return jsonify([])
+
+        # Tukar object Firebase kepada array dengan selamat
+        senarai = []
+        if isinstance(raw_data, dict):
+            for key, value in raw_data.items():
+                if isinstance(value, dict) and value.get('no_giliran') is not None:
+                    senarai.append(value)
+
+        # Susun mengikut nombor giliran
+        senarai.sort(key=lambda x: int(x.get('no_giliran', 0)))
+
+        print(f"[DEBUG] Berjaya ditukar ke array → {len(senarai)} rekod")
+
+        return jsonify(senarai)
+
     except Exception as e:
-        print("Error get senarai:", e)
+        print(f"[ERROR] get_senarai_tarikh {tarikh}:", str(e))
         return jsonify([])
 
 
-# ==================== RUN ====================
 if __name__ == '__main__':
     app.run(debug=True)
