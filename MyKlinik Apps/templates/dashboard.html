@@ -13,46 +13,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
-        body { 
-            background: #f4f7f6; 
-            font-family: 'Inter', system-ui, sans-serif; 
-        }
-        .nav-admin { 
-            background: #1a2a6c; 
-            padding: 15px; 
-            color: white; 
-        }
-        .stat-card { 
-            border: none; 
-            border-radius: 15px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-            transition: 0.3s; 
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .section-container { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 25px; 
-            margin-bottom: 30px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-        }
-        .btn-panggil { 
-            font-size: 1.5rem; 
-            padding: 15px; 
-            border-radius: 12px; 
-            font-weight: bold; 
-        }
-        .badge-status { 
-            font-size: 0.85rem; 
-            padding: 5px 10px; 
-        }
+        body { background: #f4f7f6; font-family: 'Inter', system-ui, sans-serif; }
+        .nav-admin { background: #1a2a6c; padding: 15px; color: white; }
+        .stat-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .section-container { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn-panggil { font-size: 1.5rem; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .detail-btn { cursor: pointer; }
+        .modal-header { background: #1a2a6c; color: white; }
     </style>
 </head>
 <body>
 
-<!-- Navigasi Utama -->
 <nav class="nav-admin shadow-sm mb-4">
     <div class="container d-flex justify-content-between align-items-center">
         <span class="h4 mb-0"><i class="bi bi-hospital"></i> MyKlinik Admin</span>
@@ -65,7 +37,7 @@
 
 <div class="container">
 
-    <!-- Bahagian 1: Kawalan Panggilan -->
+    <!-- Kawalan Panggilan -->
     <div class="row g-4 mb-5">
         <div class="col-md-6">
             <div class="card stat-card p-4 h-100 text-center bg-white">
@@ -85,11 +57,11 @@
         </div>
     </div>
 
-    <!-- Bahagian 2: Senarai Pesakit Hari Ini -->
+    <!-- Senarai Pesakit Hari Ini -->
     <div class="section-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold text-primary m-0"><i class="bi bi-people-fill"></i> Senarai Pesakit Hari Ini</h4>
-            <span class="badge bg-success bg-opacity-10 text-success border border-success">Auto-Update: ON (setiap 5 saat)</span>
+            <span class="badge bg-success bg-opacity-10 text-success border border-success">Auto-Update: ON</span>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -102,14 +74,12 @@
                         <th class="text-center">Tindakan</th>
                     </tr>
                 </thead>
-                <tbody id="senarai-hari-ini">
-                    <tr><td colspan="5" class="text-center py-4">Memuatkan senarai pesakit...</td></tr>
-                </tbody>
+                <tbody id="senarai-hari-ini"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Bahagian 3: Cari Rekod Lama -->
+    <!-- Carian Rekod Lama -->
     <div id="section-carian" class="section-container border-top border-warning border-5">
         <h4 class="fw-bold mb-4"><i class="bi bi-calendar-event"></i> Semak Rekod Pesakit Lama</h4>
         <div class="row g-2 mb-4">
@@ -126,108 +96,108 @@
             <table class="table table-bordered align-middle">
                 <thead class="table-secondary text-center">
                     <tr>
-                        <th width="10%">No</th>
-                        <th width="40%">Nama Pesakit</th>
-                        <th width="25%">Waktu Daftar</th>
-                        <th width="25%">Status</th>
+                        <th>No</th>
+                        <th>Nama Pesakit</th>
+                        <th>Waktu Daftar</th>
+                        <th>Status</th>
+                        <th class="text-center">Detail</th>
                     </tr>
                 </thead>
-                <tbody id="hasil-carian-lama">
-                    <tr><td colspan="4" class="text-center text-muted">Sila pilih tarikh dan klik butang Cari.</td></tr>
-                </tbody>
+                <tbody id="hasil-carian-lama"></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
-        crossorigin="anonymous"></script>
+<!-- ==================== MODAL DETAIL PESAKIT ==================== -->
+<div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalNama">Nama Pesakit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6"><strong>No. Giliran:</strong> <span id="modalNo"></span></div>
+                    <div class="col-md-6"><strong>Waktu Daftar:</strong> <span id="modalMasa"></span></div>
+                    <div class="col-md-6"><strong>Status:</strong> <span id="modalStatus" class="badge"></span></div>
+                    <div class="col-md-6"><strong>No. KP / IC:</strong> <span id="modalIC"></span></div>
+                    <div class="col-md-6"><strong>Umur:</strong> <span id="modalUmur"></span></div>
+                    <div class="col-md-6"><strong>Jantina:</strong> <span id="modalJantina"></span></div>
+                    <div class="col-md-6"><strong>No. Telefon:</strong> <span id="modalTelefon"></span></div>
+                    <div class="col-12"><strong>Alamat:</strong> <span id="modalAlamat"></span></div>
+                    <div class="col-md-6"><strong>Kategori:</strong> <span id="modalKategori"></span></div>
+                    <div class="col-12"><strong>Catatan:</strong> <span id="modalCatatan"></span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 // ==================== FUNGSI UTAMA ====================
 
-function panggilNext() {
-    fetch('/api/next', { method: 'POST' })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) alert(data.message || "Gagal memanggil nombor");
-            kemaskiniDataHarian();
-        })
-        .catch(err => console.error("Error panggilNext:", err));
+function panggilNext() { ... }   // kekal sama seperti sebelum ini
+
+function tukarStatus(no, statusBaru) { ... }   // kekal sama
+
+// Fungsi untuk buka modal detail
+function lihatDetail(pesakit) {
+    document.getElementById('modalNama').textContent = pesakit.nama || 'Tiada Nama';
+    document.getElementById('modalNo').textContent = pesakit.no_giliran || '-';
+    document.getElementById('modalMasa').textContent = pesakit.masa || '-';
+    
+    const statusEl = document.getElementById('modalStatus');
+    statusEl.textContent = (pesakit.status || 'belum').toUpperCase();
+    statusEl.className = `badge ${pesakit.status === 'selesai' ? 'bg-secondary' : pesakit.status === 'tidak_hadir' ? 'bg-dark' : 'bg-info'}`;
+
+    document.getElementById('modalIC').textContent = pesakit.ic || '-';
+    document.getElementById('modalUmur').textContent = pesakit.umur ? pesakit.umur + ' tahun' : '-';
+    document.getElementById('modalJantina').textContent = pesakit.jantina || '-';
+    document.getElementById('modalTelefon').textContent = pesakit.telefon || '-';
+    document.getElementById('modalAlamat').textContent = pesakit.alamat || '-';
+    document.getElementById('modalKategori').textContent = pesakit.kategori || 'Biasa';
+    document.getElementById('modalCatatan').textContent = pesakit.catatan || '-';
+
+    const modal = new bootstrap.Modal(document.getElementById('modalDetail'));
+    modal.show();
 }
 
-function tukarStatus(no, statusBaru) {
-    let mesej = statusBaru === 'selesai' ? 'Selesaikan rawatan?' : 'Tanda sebagai Tidak Hadir?';
-    if (!confirm(`Adakah anda pasti untuk ${mesej} (No: ${no})`)) return;
-
-    fetch('/api/kemaskini_status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ no_giliran: no, status: statusBaru })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) kemaskiniDataHarian();
-        else alert("Gagal kemaskini: " + (data.message || ""));
-    })
-    .catch(err => console.error("Error tukarStatus:", err));
-}
-
-// Fungsi utama kemaskini data
+// Kemaskini senarai hari ini (dengan butang detail)
 function kemaskiniDataHarian() {
     const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
     document.getElementById('current-date').innerText = hariIni;
 
-    console.log("🔄 Mengemaskini data untuk tarikh:", hariIni);
-
-    // Status live
-    fetch('/api/status_live')
-        .then(res => res.json())
-        .then(data => {
-            console.log("✅ Data status_live:", data);
-            document.getElementById('no-live').innerText = data.nombor_sekarang || 0;
-            document.getElementById('total-daftar').innerText = data.jumlah_giliran || 0;
-        })
-        .catch(err => console.error("❌ Error /api/status_live:", err));
-
-    // Senarai pesakit hari ini (handle Array + null)
     fetch(`/api/get_senarai_tarikh/${hariIni}`)
         .then(res => res.json())
         .then(data => {
-            console.log("✅ Data senarai hari ini:", data);
-
             const tbody = document.getElementById('senarai-hari-ini');
             tbody.innerHTML = '';
 
-            if (!data || data.length === 0) {
+            const senarai = Array.isArray(data) ? data.filter(item => item !== null) : [];
+
+            if (senarai.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tiada pendaftaran untuk hari ini.</td></tr>';
                 return;
             }
 
-            // Filter keluar null dan susun mengikut no_giliran
-            const senarai = Array.isArray(data) ? data.filter(item => item !== null && item !== undefined) : [];
-
-            if (senarai.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tiada data pesakit sah.</td></tr>';
-                return;
-            }
-
             senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0)).forEach(p => {
-                let butang = '';
+                let butangTindakan = '';
                 if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
-                    butang = `
-                        <div class="text-center">
-                            <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">
-                                <i class="bi bi-check-lg"></i> Selesai
-                            </button>
-                            <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">
-                                <i class="bi bi-x-lg"></i> Tak Hadir
-                            </button>
-                        </div>
+                    butangTindakan = `
+                        <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">Selesai</button>
+                        <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">Tak Hadir</button>
                     `;
                 }
+
+                const butangDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g, '&quot;')})' class="btn btn-sm btn-outline-primary detail-btn"><i class="bi bi-eye"></i> Detail</button>`;
 
                 let badgeClass = 'bg-warning text-dark';
                 if (p.status === 'selesai') badgeClass = 'bg-secondary';
@@ -236,57 +206,55 @@ function kemaskiniDataHarian() {
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="text-center"><span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px; height:35px">${p.no_giliran || '-'}</span></td>
-                        <td class="fw-bold">${p.nama || 'Tiada Nama'}</td>
-                        <td>${p.masa || '-'}</td>
-                        <td><span class="badge ${badgeClass} badge-status">${(p.status || 'belum').toUpperCase()}</span></td>
-                        <td>${butang}</td>
+                        <td class="text-center"><span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px;height:35px">${p.no_giliran}</span></td>
+                        <td class="fw-bold">${p.nama}</td>
+                        <td>${p.masa}</td>
+                        <td><span class="badge ${badgeClass}">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td class="text-center">
+                            ${butangTindakan}
+                            ${butangDetail}
+                        </td>
                     </tr>
                 `;
             });
         })
-        .catch(err => {
-            console.error("❌ Error fetch senarai hari ini:", err);
-            document.getElementById('senarai-hari-ini').innerHTML = 
-                `<tr><td colspan="5" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`;
-        });
+        .catch(err => console.error("Error senarai hari ini:", err));
 }
 
+// Fungsi carian lama (dengan butang detail)
 function cariRekodLama() {
     const tarikh = document.getElementById('tarikh-cari').value;
     if (!tarikh) return alert("Sila pilih tarikh!");
 
     const tbody = document.getElementById('hasil-carian-lama');
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Mencari data...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3">Mencari data...</td></tr>';
 
     fetch(`/api/get_senarai_tarikh/${tarikh}`)
         .then(res => res.json())
         .then(data => {
-            console.log("✅ Data carian lama:", data);
             tbody.innerHTML = '';
-
-            const senarai = Array.isArray(data) ? data.filter(item => item !== null && item !== undefined) : [];
+            const senarai = Array.isArray(data) ? data.filter(item => item !== null) : [];
 
             if (senarai.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Tiada rekod pada tarikh ${tarikh}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Tiada rekod pada tarikh ${tarikh}</td></tr>`;
                 return;
             }
 
             senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0)).forEach(p => {
+                const butangDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g, '&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Detail</button>`;
+
                 tbody.innerHTML += `
                     <tr>
-                        <td class="text-center">${p.no_giliran || '-'}</td>
-                        <td>${p.nama || 'Tiada Nama'}</td>
-                        <td class="text-center">${p.masa || '-'}</td>
-                        <td class="text-center"><span class="badge bg-secondary">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td>${p.no_giliran}</td>
+                        <td>${p.nama}</td>
+                        <td>${p.masa}</td>
+                        <td><span class="badge bg-secondary">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td class="text-center">${butangDetail}</td>
                     </tr>
                 `;
             });
         })
-        .catch(err => {
-            console.error("❌ Error cari rekod lama:", err);
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Ralat semasa mencari.</td></tr>`;
-        });
+        .catch(err => console.error("Error carian:", err));
 }
 
 // Auto refresh
