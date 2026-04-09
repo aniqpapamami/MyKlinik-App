@@ -169,23 +169,20 @@ function tukarStatus(no, statusBaru) {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success) {
-            kemaskiniDataHarian();
-        } else {
-            alert("Gagal kemaskini: " + (data.message || "Tiada maklumat"));
-        }
+        if (data.success) kemaskiniDataHarian();
+        else alert("Gagal kemaskini: " + (data.message || ""));
     })
     .catch(err => console.error("Error tukarStatus:", err));
 }
 
-// Fungsi utama kemaskini data (dipanggil setiap 5 saat)
+// Fungsi utama kemaskini data
 function kemaskiniDataHarian() {
     const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
     document.getElementById('current-date').innerText = hariIni;
 
     console.log("🔄 Mengemaskini data untuk tarikh:", hariIni);
 
-    // Fetch status live
+    // Status live
     fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
@@ -195,7 +192,7 @@ function kemaskiniDataHarian() {
         })
         .catch(err => console.error("❌ Error /api/status_live:", err));
 
-    // Fetch senarai pesakit hari ini
+    // Senarai pesakit hari ini (handle Array + null)
     fetch(`/api/get_senarai_tarikh/${hariIni}`)
         .then(res => res.json())
         .then(data => {
@@ -204,15 +201,20 @@ function kemaskiniDataHarian() {
             const tbody = document.getElementById('senarai-hari-ini');
             tbody.innerHTML = '';
 
-            if (!data || Object.keys(data).length === 0) {
+            if (!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tiada pendaftaran untuk hari ini.</td></tr>';
                 return;
             }
 
-            // Susun mengikut nombor giliran (kecil ke besar)
-            Object.keys(data).sort((a, b) => Number(a) - Number(b)).forEach(key => {
-                const p = data[key];
+            // Filter keluar null dan susun mengikut no_giliran
+            const senarai = Array.isArray(data) ? data.filter(item => item !== null && item !== undefined) : [];
 
+            if (senarai.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Tiada data pesakit sah.</td></tr>';
+                return;
+            }
+
+            senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0)).forEach(p => {
                 let butang = '';
                 if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
                     butang = `
@@ -234,10 +236,10 @@ function kemaskiniDataHarian() {
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="text-center"><span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px; height:35px">${p.no_giliran}</span></td>
-                        <td class="fw-bold">${p.nama}</td>
-                        <td>${p.masa}</td>
-                        <td><span class="badge ${badgeClass} badge-status">${p.status.toUpperCase()}</span></td>
+                        <td class="text-center"><span class="badge bg-primary fs-6 rounded-circle p-2" style="width:35px; height:35px">${p.no_giliran || '-'}</span></td>
+                        <td class="fw-bold">${p.nama || 'Tiada Nama'}</td>
+                        <td>${p.masa || '-'}</td>
+                        <td><span class="badge ${badgeClass} badge-status">${(p.status || 'belum').toUpperCase()}</span></td>
                         <td>${butang}</td>
                     </tr>
                 `;
@@ -246,16 +248,13 @@ function kemaskiniDataHarian() {
         .catch(err => {
             console.error("❌ Error fetch senarai hari ini:", err);
             document.getElementById('senarai-hari-ini').innerHTML = 
-                `<tr><td colspan="5" class="text-center text-danger py-4">Gagal memuat data. Sila semak console.</td></tr>`;
+                `<tr><td colspan="5" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`;
         });
 }
 
 function cariRekodLama() {
     const tarikh = document.getElementById('tarikh-cari').value;
-    if (!tarikh) {
-        alert("Sila pilih tarikh terlebih dahulu!");
-        return;
-    }
+    if (!tarikh) return alert("Sila pilih tarikh!");
 
     const tbody = document.getElementById('hasil-carian-lama');
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Mencari data...</td></tr>';
@@ -266,32 +265,33 @@ function cariRekodLama() {
             console.log("✅ Data carian lama:", data);
             tbody.innerHTML = '';
 
-            if (!data || Object.keys(data).length === 0) {
+            const senarai = Array.isArray(data) ? data.filter(item => item !== null && item !== undefined) : [];
+
+            if (senarai.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Tiada rekod pada tarikh ${tarikh}</td></tr>`;
                 return;
             }
 
-            Object.keys(data).sort((a, b) => Number(a) - Number(b)).forEach(key => {
-                const p = data[key];
+            senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0)).forEach(p => {
                 tbody.innerHTML += `
                     <tr>
-                        <td class="text-center">${p.no_giliran}</td>
-                        <td>${p.nama}</td>
-                        <td class="text-center">${p.masa}</td>
-                        <td class="text-center"><span class="badge bg-secondary text-white">${p.status.toUpperCase()}</span></td>
+                        <td class="text-center">${p.no_giliran || '-'}</td>
+                        <td>${p.nama || 'Tiada Nama'}</td>
+                        <td class="text-center">${p.masa || '-'}</td>
+                        <td class="text-center"><span class="badge bg-secondary">${(p.status || 'belum').toUpperCase()}</span></td>
                     </tr>
                 `;
             });
         })
         .catch(err => {
             console.error("❌ Error cari rekod lama:", err);
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Ralat semasa mencari data.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Ralat semasa mencari.</td></tr>`;
         });
 }
 
-// ==================== AUTO REFRESH ====================
-setInterval(kemaskiniDataHarian, 5000);   // Setiap 5 saat
-window.onload = kemaskiniDataHarian;       // Jalankan bila page dibuka
+// Auto refresh
+setInterval(kemaskiniDataHarian, 5000);
+window.onload = kemaskiniDataHarian;
 </script>
 
 </body>
