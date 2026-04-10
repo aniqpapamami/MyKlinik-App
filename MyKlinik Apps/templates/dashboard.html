@@ -177,25 +177,39 @@ function lihatDetail(p) {
     modal.show();
 }
 
-// Kemaskini Senarai Hari Ini
+// ==================== KEMASKINI SENARAI HARI INI ====================
 function kemaskiniDataHarian() {
     const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
     document.getElementById('current-date').innerText = hariIni;
 
+    console.log("=== DEBUG: Sedang fetch senarai untuk tarikh:", hariIni);
+
     fetch(`/api/get_senarai_tarikh/${hariIni}`)
-        .then(res => res.json())
+        .then(res => {
+            console.log("Status Response:", res.status);
+            return res.json();
+        })
         .then(data => {
+            console.log("✅ Data diterima (array):", data);
+
             const tbody = document.getElementById('senarai-hari-ini');
             tbody.innerHTML = '';
 
-            const senarai = Array.isArray(data) ? data.filter(item => item != null) : [];
+            // Pastikan data adalah array
+            let senarai = Array.isArray(data) ? data : [];
+            
+            // Filter null / undefined
+            senarai = senarai.filter(item => item != null && typeof item === 'object');
 
             if (senarai.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Tiada pendaftaran hari ini.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Tiada pendaftaran hari ini.</td></tr>`;
                 return;
             }
 
-            senarai.sort((a,b) => (a.no_giliran||0) - (b.no_giliran||0)).forEach(p => {
+            // Susun semula (jaga-jaga)
+            senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0));
+
+            senarai.forEach(p => {
                 let tindakan = '';
                 if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
                     tindakan = `
@@ -213,20 +227,25 @@ function kemaskiniDataHarian() {
 
                 tbody.innerHTML += `
                     <tr>
-                        <td class="text-center fw-bold">${p.no_giliran}</td>
-                        <td>${p.nama}</td>
+                        <td class="text-center fw-bold">${p.no_giliran || '-'}</td>
+                        <td>${p.nama || 'Tiada Nama'}</td>
                         <td>${p.no_ic || '-'}</td>
                         <td>${p.no_hp || '-'}</td>
                         <td>${p.masa || '-'}</td>
-                        <td><span class="badge ${badge}">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td><span class="badge ${badge}">${(p.status || 'menunggu').toUpperCase()}</span></td>
                         <td class="text-center">${tindakan} ${btnDetail}</td>
                     </tr>
                 `;
             });
+        })
+        .catch(err => {
+            console.error("❌ Fetch Error:", err);
+            document.getElementById('senarai-hari-ini').innerHTML = 
+                `<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`;
         });
 }
 
-// Carian Rekod Lama
+// ==================== KEMASKINI SENARAI HARI INI ====================
 function cariRekodLama() {
     const tarikh = document.getElementById('tarikh-cari').value;
     if (!tarikh) return alert("Sila pilih tarikh!");
@@ -237,8 +256,11 @@ function cariRekodLama() {
     fetch(`/api/get_senarai_tarikh/${tarikh}`)
         .then(res => res.json())
         .then(data => {
+            console.log("✅ Data carian lama:", data);
             tbody.innerHTML = '';
-            const senarai = Array.isArray(data) ? data.filter(item => item != null) : [];
+
+            let senarai = Array.isArray(data) ? data : [];
+            senarai = senarai.filter(item => item != null);
 
             if (senarai.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Tiada rekod pada tarikh ini.</td></tr>`;
@@ -250,17 +272,18 @@ function cariRekodLama() {
 
                 tbody.innerHTML += `
                     <tr>
-                        <td>${p.no_giliran}</td>
-                        <td>${p.nama}</td>
+                        <td>${p.no_giliran || '-'}</td>
+                        <td>${p.nama || '-'}</td>
                         <td>${p.no_ic || '-'}</td>
                         <td>${p.no_hp || '-'}</td>
                         <td>${p.masa || '-'}</td>
-                        <td><span class="badge bg-secondary">${(p.status || 'belum').toUpperCase()}</span></td>
+                        <td><span class="badge bg-secondary">${(p.status || 'menunggu').toUpperCase()}</span></td>
                         <td class="text-center">${btnDetail}</td>
                     </tr>
                 `;
             });
-        });
+        })
+        .catch(err => console.error("Error carian:", err));
 }
 
 // Auto Refresh

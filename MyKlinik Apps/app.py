@@ -136,23 +136,38 @@ def kemaskini_status():
 def get_senarai_tarikh(tarikh):
     try:
         res = requests.get(f"{BASE_URL}/harian/{tarikh}/senarai_pesakit.json")
-        data = res.json() or {}
+        raw_data = res.json()
 
-        print(f"[DEBUG] Tarikh {tarikh} → Raw data: {type(data)}")
+        print(f"[DEBUG] Tarikh: {tarikh} | Type: {type(raw_data)} | Raw data: {raw_data}")
 
-        # Kembalikan seperti kod asal tapi dengan penukaran selamat
-        if isinstance(data, dict):
-            senarai = [item for item in data.values() if item is not None]
-            senarai.sort(key=lambda x: int(x.get('no_giliran', 0)))
-            print(f"[DEBUG] Ditukar ke array → {len(senarai)} rekod")
-            return jsonify(senarai)
+        if not raw_data:
+            print(f"[DEBUG] Tiada data untuk tarikh {tarikh}")
+            return jsonify([])
 
-        return jsonify([])
+        senarai = []
+
+        # Handle jika Firebase return array (seperti [None, {data}])
+        if isinstance(raw_data, list):
+            for item in raw_data:
+                if item is not None and isinstance(item, dict):
+                    senarai.append(item)
+
+        # Handle jika Firebase return object biasa ({"1": {data}})
+        elif isinstance(raw_data, dict):
+            for key, value in raw_data.items():
+                if value is not None and isinstance(value, dict):
+                    senarai.append(value)
+
+        # Susun mengikut no_giliran
+        senarai.sort(key=lambda x: int(x.get('no_giliran', 0)))
+
+        print(f"[DEBUG] Berjaya ditukar ke array | Jumlah rekod: {len(senarai)}")
+
+        return jsonify(senarai)
 
     except Exception as e:
-        print(f"[ERROR] get_senarai_tarikh {tarikh}:", e)
+        print(f"[ERROR] get_senarai_tarikh {tarikh}: {e}")
         return jsonify([])
-
-
+		
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
