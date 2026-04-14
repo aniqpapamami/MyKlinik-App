@@ -11,12 +11,44 @@
         .nav-admin { background: #1a2a6c; padding: 15px; color: white; }
         .stat-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
         .stat-card:hover { transform: translateY(-5px); }
-        .section-container { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn-panggil { font-size: 1.5rem; padding: 15px; border-radius: 12px; font-weight: bold; }
+        .section-container { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+        }
+        .btn-panggil { 
+            font-size: 1.5rem; 
+            padding: 15px; 
+            border-radius: 12px; 
+            font-weight: bold; 
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 -3px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .nav-item {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .nav-item i {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .nav-item.active {
+            color: #0d6efd;
+        }
     </style>
 </head>
 <body>
-
 <nav class="nav-admin shadow-sm mb-4">
     <div class="container d-flex justify-content-between align-items-center">
         <span class="h4 mb-0"><i class="bi bi-hospital"></i> MyKlinik Admin</span>
@@ -103,9 +135,88 @@
             </table>
         </div>
     </div>
+
+    <!-- ==================== URUS CAROUSEL IKLan ==================== -->
+    <div class="section-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-primary m-0">
+                <i class="bi bi-images"></i> Urus Iklan di Monitor Giliran
+            </h4>
+            <button onclick="tambahSlideBaru()" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Tambah Slide Baru
+            </button>
+        </div>
+        <div id="senarai-slides" class="list-group">
+            <!-- Slides akan dimuat oleh JavaScript -->
+        </div>
+    </div>
+
 </div>
 
-<!-- Modal -->
+<!-- Modal Edit / Tambah Slide (Versi yang disokong gambar & video) -->
+<div class="modal fade" id="modalSlide" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalSlideTitle">Tambah Slide Baru</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="slide_id">
+
+                <div class="mb-3">
+                    <label class="form-label">Jenis Slide</label>
+                    <select id="slide_type" class="form-select" onchange="toggleSlideFields()">
+                        <option value="text">Teks Sahaja</option>
+                        <option value="image">Gambar + Teks</option>
+                        <option value="video">Video (YouTube)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tajuk Slide</label>
+                    <input type="text" id="slide_title" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Warna Tajuk</label>
+                    <select id="slide_color" class="form-select">
+                        <option value="text-primary">Biru</option>
+                        <option value="text-success">Hijau</option>
+                        <option value="text-danger">Merah</option>
+                        <option value="text-warning">Kuning</option>
+                    </select>
+                </div>
+
+                <!-- Field untuk Teks -->
+                <div id="field_text" class="mb-3">
+                    <label class="form-label">Kandungan Teks</label>
+                    <textarea id="slide_content" class="form-control" rows="3"></textarea>
+                </div>
+
+                <!-- Field untuk Gambar -->
+                <div id="field_image" class="mb-3" style="display:none;">
+                    <label class="form-label">URL Gambar</label>
+                    <input type="text" id="slide_image_url" class="form-control" placeholder="https://contoh.com/gambar.jpg atau /static/gambar1.jpg">
+                    <small class="text-muted">Letak gambar di folder static dan guna URL seperti /static/poster-vaksin.jpg</small>
+                </div>
+
+                <!-- Field untuk Video -->
+                <div id="field_video" class="mb-3" style="display:none;">
+                    <label class="form-label">URL Video YouTube (Embed)</label>
+                    <input type="text" id="slide_video_url" class="form-control" placeholder="https://www.youtube.com/embed/xxxxxxxx">
+                    <small class="text-muted">Contoh: https://www.youtube.com/embed/dQw4w9wgxcq</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button onclick="simpanSlide()" class="btn btn-primary">Simpan Slide</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail Pesakit -->
 <div class="modal fade" id="modalDetail" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -130,10 +241,27 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bottom Navigation -->
+<nav class="bottom-nav py-3">
+    <div class="container d-flex justify-content-around">
+        <a href="/" class="nav-item active text-center">
+            <i class="fas fa-home"></i>
+            <div>Home</div>
+        </a>
+        <a href="/monitor" class="nav-item text-center">
+            <i class="fas fa-tv"></i>
+            <div>Monitor</div>
+        </a>
+    </div>
+</nav>
 
+<footer class="bg-dark text-white text-center py-4 mt-5">
+    <p class="mb-0">© 2026 MyKlinik Management System</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ==================== FUNGSI UTAMA ====================
+// ==================== FUNGSI UTAMA (Admin lama) ====================
 function panggilNext() {
     fetch('/api/next', { method: 'POST' })
         .then(res => res.json())
@@ -143,7 +271,6 @@ function panggilNext() {
 
 function tukarStatus(no, statusBaru) {
     if (!confirm(`Pastikan untuk ${statusBaru === 'selesai' ? 'selesaikan' : 'tanda tidak hadir'} nombor ${no}?`)) return;
-
     fetch('/api/kemaskini_status', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -163,22 +290,19 @@ function lihatDetail(p) {
     document.getElementById('modalMasa').textContent = p.masa || '-';
     document.getElementById('modalIC').textContent = p.no_ic || '-';
     document.getElementById('modalHP').textContent = p.no_hp || '-';
-
     const statusEl = document.getElementById('modalStatus');
     statusEl.textContent = (p.status || 'menunggu').toUpperCase();
     if (p.status === 'selesai') statusEl.className = 'badge bg-secondary';
     else if (p.status === 'tidak_hadir') statusEl.className = 'badge bg-dark';
     else statusEl.className = 'badge bg-info';
-
     new bootstrap.Modal(document.getElementById('modalDetail')).show();
 }
 
-// ==================== KEMASKINI DATA (NOMbor + JUMLAH + SENARAI) ====================
+// ==================== KEMASKINI DATA HARIAN ====================
 function kemaskiniDataHarian() {
     const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
     document.getElementById('current-date').innerText = hariIni;
 
-    // Update Nombor Sekarang & Jumlah Pendaftaran
     fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
@@ -187,23 +311,18 @@ function kemaskiniDataHarian() {
         })
         .catch(err => console.error("Error status_live:", err));
 
-    // Update Senarai Pesakit
     fetch(`/api/get_senarai_tarikh/${hariIni}`)
         .then(res => res.json())
         .then(data => {
             const tbody = document.getElementById('senarai-hari-ini');
             tbody.innerHTML = '';
-
             let senarai = Array.isArray(data) ? data : [];
             senarai = senarai.filter(item => item != null && typeof item === 'object');
-
             if (senarai.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Tiada pendaftaran hari ini.</td></tr>`;
                 return;
             }
-
             senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0));
-
             senarai.forEach(p => {
                 let tindakan = '';
                 if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
@@ -212,9 +331,7 @@ function kemaskiniDataHarian() {
                         <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">Tak Hadir</button>
                     `;
                 }
-
                 const btnDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>`;
-
                 let badge = 'bg-warning text-dark';
                 if (p.status === 'selesai') badge = 'bg-secondary';
                 if (p.status === 'tidak_hadir') badge = 'bg-dark';
@@ -240,29 +357,23 @@ function kemaskiniDataHarian() {
         });
 }
 
-// ==================== CARIAN REKOD LAMA ====================
 function cariRekodLama() {
     const tarikh = document.getElementById('tarikh-cari').value;
     if (!tarikh) return alert("Sila pilih tarikh!");
-
     const tbody = document.getElementById('hasil-carian-lama');
     tbody.innerHTML = '<tr><td colspan="7" class="text-center">Mencari...</td></tr>';
-
     fetch(`/api/get_senarai_tarikh/${tarikh}`)
         .then(res => res.json())
         .then(data => {
             tbody.innerHTML = '';
             let senarai = Array.isArray(data) ? data : [];
             senarai = senarai.filter(item => item != null);
-
             if (senarai.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Tiada rekod pada tarikh ini.</td></tr>`;
                 return;
             }
-
             senarai.sort((a,b) => (a.no_giliran||0) - (b.no_giliran||0)).forEach(p => {
                 const btnDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>`;
-
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.no_giliran || '-'}</td>
@@ -279,9 +390,144 @@ function cariRekodLama() {
         .catch(err => console.error("Error carian:", err));
 }
 
-// Auto Refresh setiap 5 saat
+// ==================== FUNGSI CAROUSEL BARU ====================
+function toggleSlideFields() {
+    const type = document.getElementById('slide_type').value;
+    document.getElementById('field_text').style.display = (type === 'text' || type === 'image') ? 'block' : 'none';
+    document.getElementById('field_image').style.display = (type === 'image') ? 'block' : 'none';
+    document.getElementById('field_video').style.display = (type === 'video') ? 'block' : 'none';
+}
+
+function loadSlides() {
+    fetch('/api/iklan_carousel')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('senarai-slides');
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `<div class="list-group-item text-muted text-center py-4">Belum ada slide iklan. Klik "Tambah Slide Baru".</div>`;
+                return;
+            }
+
+            data.forEach(slide => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+
+                let jenis = '📝 Teks';
+                let extraInfo = '';
+
+                if (slide.type === 'image') {
+                    jenis = '🖼️ Gambar';
+                    extraInfo = slide.image_url ? `<br><small class="text-info">Gambar: ${slide.image_url.split('/').pop()}</small>` : '';
+                } else if (slide.type === 'video') {
+                    jenis = '🎥 Video';
+                    extraInfo = slide.video_url ? `<br><small class="text-info">YouTube Video</small>` : '';
+                }
+
+                item.innerHTML = `
+                    <div style="flex: 1;">
+                        <h6 class="${slide.color || 'text-primary'} mb-1">
+                            ${slide.title || '(Tiada Tajuk)'} 
+                            <small class="text-muted">(${jenis})</small>
+                        </h6>
+                        <small class="text-muted">
+                            ${(slide.content || '').substring(0, 65)}...
+                            ${extraInfo}
+                        </small>
+                    </div>
+                    <div>
+                        <button onclick="editSlide(${slide.id})" class="btn btn-sm btn-outline-primary me-2">Edit</button>
+                        <button onclick="padamSlide(${slide.id})" class="btn btn-sm btn-outline-danger">Padam</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        })
+        .catch(err => {
+            console.error("Gagal load slides:", err);
+            document.getElementById('senarai-slides').innerHTML = 
+                `<div class="list-group-item text-danger">Gagal memuat senarai slide.</div>`;
+        });
+}
+
+function tambahSlideBaru() {
+    document.getElementById('modalSlideTitle').textContent = 'Tambah Slide Baru';
+    document.getElementById('slide_id').value = '';
+    document.getElementById('slide_type').value = 'text';
+    document.getElementById('slide_title').value = '';
+    document.getElementById('slide_color').value = 'text-primary';
+    document.getElementById('slide_content').value = '';
+    document.getElementById('slide_image_url').value = '';
+    document.getElementById('slide_video_url').value = '';
+    toggleSlideFields();
+    new bootstrap.Modal(document.getElementById('modalSlide')).show();
+}
+
+function editSlide(id) {
+    fetch(`/api/iklan_carousel/${id}`)
+        .then(res => res.json())
+        .then(slide => {
+            document.getElementById('modalSlideTitle').textContent = 'Edit Slide';
+            document.getElementById('slide_id').value = slide.id;
+            document.getElementById('slide_type').value = slide.type || 'text';
+            document.getElementById('slide_title').value = slide.title || '';
+            document.getElementById('slide_color').value = slide.color || 'text-primary';
+            document.getElementById('slide_content').value = slide.content || '';
+            document.getElementById('slide_image_url').value = slide.image_url || '';
+            document.getElementById('slide_video_url').value = slide.video_url || '';
+            toggleSlideFields();
+            new bootstrap.Modal(document.getElementById('modalSlide')).show();
+        })
+        .catch(err => alert("Gagal memuat data slide"));
+}
+
+function simpanSlide() {
+    const id = document.getElementById('slide_id').value;
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/iklan_carousel/${id}` : '/api/iklan_carousel';
+
+    const data = {
+        type: document.getElementById('slide_type').value,
+        title: document.getElementById('slide_title').value.trim(),
+        color: document.getElementById('slide_color').value,
+        content: document.getElementById('slide_content').value.trim(),
+        image_url: document.getElementById('slide_image_url').value.trim(),
+        video_url: document.getElementById('slide_video_url').value.trim()
+    };
+
+    if (!data.title) {
+        alert("Tajuk slide tidak boleh kosong!");
+        return;
+    }
+
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(() => {
+        bootstrap.Modal.getInstance(document.getElementById('modalSlide')).hide();
+        loadSlides();
+        alert('Slide berjaya disimpan!');
+    })
+    .catch(err => alert("Gagal menyimpan slide"));
+}
+
+function padamSlide(id) {
+    if (!confirm('Padam slide ini?')) return;
+    fetch(`/api/iklan_carousel/${id}`, { method: 'DELETE' })
+        .then(() => loadSlides());
+}
+
+// ==================== INISIALISASI ====================
+window.onload = function() {
+    kemaskiniDataHarian();
+    loadSlides();
+};
+
 setInterval(kemaskiniDataHarian, 5000);
-window.onload = kemaskiniDataHarian;
 </script>
 </body>
 </html>
