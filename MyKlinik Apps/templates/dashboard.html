@@ -390,7 +390,8 @@ function cariRekodLama() {
         .catch(err => console.error("Error carian:", err));
 }
 
-// ==================== FUNGSI CAROUSEL BARU ====================
+// ==================== FUNGSI CAROUSEL ====================
+
 function toggleSlideFields() {
     const type = document.getElementById('slide_type').value;
     document.getElementById('field_text').style.display = (type === 'text' || type === 'image') ? 'block' : 'none';
@@ -398,6 +399,7 @@ function toggleSlideFields() {
     document.getElementById('field_video').style.display = (type === 'video') ? 'block' : 'none';
 }
 
+// ==================== LOAD SLIDES (Versi Lebih Cantik) ====================
 function loadSlides() {
     fetch('/api/iklan_carousel')
         .then(res => res.json())
@@ -406,7 +408,10 @@ function loadSlides() {
             container.innerHTML = '';
 
             if (!data || data.length === 0) {
-                container.innerHTML = `<div class="list-group-item text-muted text-center py-4">Belum ada slide iklan. Klik "Tambah Slide Baru".</div>`;
+                container.innerHTML = `
+                    <div class="list-group-item text-muted text-center py-4">
+                        Belum ada slide iklan. Klik "Tambah Slide Baru".
+                    </div>`;
                 return;
             }
 
@@ -419,10 +424,12 @@ function loadSlides() {
 
                 if (slide.type === 'image') {
                     jenis = '🖼️ Gambar';
-                    extraInfo = slide.image_url ? `<br><small class="text-info">Gambar: ${slide.image_url.split('/').pop()}</small>` : '';
-                } else if (slide.type === 'video') {
+                    extraInfo = slide.image_url ? 
+                        `<br><small class="text-info">Gambar: ${slide.image_url.split('/').pop()}</small>` : '';
+                } 
+                else if (slide.type === 'video') {
                     jenis = '🎥 Video';
-                    extraInfo = slide.video_url ? `<br><small class="text-info">YouTube Video</small>` : '';
+                    extraInfo = `<br><small class="text-info">YouTube Video</small>`;
                 }
 
                 item.innerHTML = `
@@ -432,7 +439,7 @@ function loadSlides() {
                             <small class="text-muted">(${jenis})</small>
                         </h6>
                         <small class="text-muted">
-                            ${(slide.content || '').substring(0, 65)}...
+                            ${(slide.content || '').substring(0, 70)}...
                             ${extraInfo}
                         </small>
                     </div>
@@ -446,8 +453,11 @@ function loadSlides() {
         })
         .catch(err => {
             console.error("Gagal load slides:", err);
-            document.getElementById('senarai-slides').innerHTML = 
-                `<div class="list-group-item text-danger">Gagal memuat senarai slide.</div>`;
+            // Ganti mesej error dengan yang lebih mesra
+            document.getElementById('senarai-slides').innerHTML = `
+                <div class="list-group-item text-muted text-center py-4">
+                    Tiada sambungan ke server. Sila refresh halaman.
+                </div>`;
         });
 }
 
@@ -479,7 +489,9 @@ function editSlide(id) {
             toggleSlideFields();
             new bootstrap.Modal(document.getElementById('modalSlide')).show();
         })
-        .catch(err => alert("Gagal memuat data slide"));
+        .catch(err => {
+            alert("Gagal memuat data slide. Sila cuba lagi.");
+        });
 }
 
 function simpanSlide() {
@@ -509,16 +521,20 @@ function simpanSlide() {
     .then(res => res.json())
     .then(() => {
         bootstrap.Modal.getInstance(document.getElementById('modalSlide')).hide();
-        loadSlides();
+        loadSlides();        // Refresh senarai
         alert('Slide berjaya disimpan!');
     })
-    .catch(err => alert("Gagal menyimpan slide"));
+    .catch(err => {
+        console.error(err);
+        alert("Gagal menyimpan slide. Sila semak sambungan internet.");
+    });
 }
 
 function padamSlide(id) {
     if (!confirm('Padam slide ini?')) return;
     fetch(`/api/iklan_carousel/${id}`, { method: 'DELETE' })
-        .then(() => loadSlides());
+        .then(() => loadSlides())
+        .catch(err => alert("Gagal memadam slide"));
 }
 
 // ==================== INISIALISASI ====================

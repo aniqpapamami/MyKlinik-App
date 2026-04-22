@@ -169,34 +169,32 @@ def get_senarai_tarikh(tarikh):
         print(f"[ERROR] get_senarai_tarikh {tarikh}: {e}")
         return jsonify([])
 		
-# ==================== API UNTUK URUS CAROUSEL IKLan ====================
+# ==================== API UNTUK URUS CAROUSEL IKLan (VERSI DIPERBAIKI) ====================
 
 @app.route('/api/iklan_carousel', methods=['GET'])
 def get_iklan_carousel():
-    """Dapatkan semua slide iklan"""
-    today = get_today()  # optional, kalau nak simpan iklan mengikut hari
     try:
         res = requests.get(f"{BASE_URL}/iklan_carousel.json")
         data = res.json()
+
         if not data:
             return jsonify([])
-        
-        # Tukar dari object Firebase ke list
+
         slides = []
         if isinstance(data, dict):
             for key, value in data.items():
                 if value and isinstance(value, dict):
-                    value['id'] = int(key) if key.isdigit() else key
+                    value['id'] = key
                     slides.append(value)
         elif isinstance(data, list):
             for i, item in enumerate(data):
-                if item:
-                    item['id'] = i
+                if item and isinstance(item, dict):
+                    item['id'] = str(i)
                     slides.append(item)
-        
-        # Susun mengikut id
-        slides.sort(key=lambda x: x.get('id', 0))
+
+        slides.sort(key=lambda x: int(x.get('id', 0)))
         return jsonify(slides)
+
     except Exception as e:
         print("Error get iklan_carousel:", e)
         return jsonify([]), 500
@@ -204,60 +202,88 @@ def get_iklan_carousel():
 
 @app.route('/api/iklan_carousel', methods=['POST'])
 def tambah_iklan_carousel():
-    """Tambah slide baru"""
     try:
         data = request.get_json()
-        title = data.get('title')
-        color = data.get('color')
-        content = data.get('content')
+        title = data.get('title', '').strip()
+        color = data.get('color', 'text-primary')
+        content = data.get('content', '').strip()
+        image_url = data.get('image_url', '').strip()
+        video_url = data.get('video_url', '').strip()
+        slide_type = data.get('type', 'text')
 
-        if not title or not content:
-            return jsonify({'success': False, 'message': 'Tajuk dan kandungan diperlukan'}), 400
+        if not title:
+            return jsonify({'success': False, 'message': 'Tajuk diperlukan'}), 400
 
-        # Dapatkan senarai semasa
         res = requests.get(f"{BASE_URL}/iklan_carousel.json")
         existing = res.json() or {}
-        
-        # Cari ID baru (increment)
-        new_id = max([int(k) for k in existing.keys()] or [0]) + 1
 
-        requests.put(f"{BASE_URL}/iklan_carousel/{new_id}.json", json={
+        if isinstance(existing, list):
+            new_id = len(existing)
+        else:
+            new_id = max([int(k) for k in existing.keys() if str(k).isdigit()] or [0]) + 1
+
+        new_slide = {
+            'type': slide_type,
             'title': title,
-            'color': color or 'text-primary',
-            'content': content
-        })
+            'color': color,
+            'content': content,
+            'image_url': image_url,
+            'video_url': video_url
+        }
 
+        requests.put(f"{BASE_URL}/iklan_carousel/{new_id}.json", json=new_slide)
         return jsonify({'success': True, 'id': new_id})
+
     except Exception as e:
         print("Error tambah iklan:", e)
-        return jsonify({'success': False, 'message': 'Ralat semasa menambah slide'}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ==================== ROUTE PENTING INI (UNTUK EDIT) ====================
+@app.route('/api/iklan_carousel/<int:slide_id>', methods=['GET'])
+def get_single_iklan(slide_id):
+    """Dapatkan satu slide untuk fungsi Edit"""
+    try:
+        res = requests.get(f"{BASE_URL}/iklan_carousel/{slide_id}.json")
+        slide = res.json()
+        
+        if not slide:
+            return jsonify({'error': 'Slide tidak ditemui'}), 404
+            
+        slide['id'] = slide_id
+        return jsonify(slide)
+        
+    except Exception as e:
+        print("Error get single iklan:", e)
+        return jsonify({'error': 'Gagal memuat slide'}), 500
 
 
 @app.route('/api/iklan_carousel/<int:slide_id>', methods=['PUT'])
 def edit_iklan_carousel(slide_id):
-    """Edit slide sedia ada"""
     try:
         data = request.get_json()
         requests.patch(f"{BASE_URL}/iklan_carousel/{slide_id}.json", json={
+            'type': data.get('type'),
             'title': data.get('title'),
             'color': data.get('color'),
-            'content': data.get('content')
+            'content': data.get('content'),
+            'image_url': data.get('image_url'),
+            'video_url': data.get('video_url')
         })
         return jsonify({'success': True})
     except Exception as e:
         print("Error edit iklan:", e)
-        return jsonify({'success': False, 'message': 'Ralat semasa mengedit slide'}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 
 @app.route('/api/iklan_carousel/<int:slide_id>', methods=['DELETE'])
 def padam_iklan_carousel(slide_id):
-    """Padam slide"""
     try:
         requests.delete(f"{BASE_URL}/iklan_carousel/{slide_id}.json")
         return jsonify({'success': True})
     except Exception as e:
         print("Error padam iklan:", e)
-        return jsonify({'success': False, 'message': 'Ralat semasa memadam slide'}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 		
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

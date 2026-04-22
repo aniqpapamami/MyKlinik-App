@@ -21,7 +21,6 @@
             flex-direction: column;
             padding: 30px;
         }
-
         .header {
             display: flex;
             align-items: center;
@@ -56,7 +55,6 @@
             margin-top: 5px;
         }
 
-        /* Main Card */
         .main-card {
             background: linear-gradient(135deg, #1e2937 0%, #334155 100%);
             color: white;
@@ -68,7 +66,6 @@
             border: 1px solid rgba(255,255,255,0.08);
         }
 
-        /* Bahagian Nombor Giliran - Label "NOMBOR SEKARANG" dibaiki */
         .number-section {
             flex: 1;
             display: flex;
@@ -76,18 +73,44 @@
             justify-content: center;
             align-items: center;
             background: linear-gradient(135deg, #0f172a, #1e2937);
-            padding: 40px 40px 50px;
-            position: relative;
+            padding: 60px 50px 40px;
+        }
+        .info-section {
+            flex: 1;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #1e2937;
+        }
+		.carousel-item {
+            display: none;
+            transition: transform .6s ease-in-out;
+        }
+		
+		.carousel-item img {
+            max-height: 380px;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            margin-bottom: 25px;
+        }
+		.carousel-video {
+            width: 100%;
+            max-width: 820px;
+            aspect-ratio: 16/9;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
         }
         .number-label {
-            font-size: 2.1rem;           /* Saiz dikurangkan sikit supaya selamat */
+            font-size: 2.1rem;
             font-weight: 700;
             letter-spacing: 5px;
-            margin-bottom: 25px;         /* Tambah jarak ke bawah */
+            margin-bottom: 20px;
             color: #94a3b8;
             text-transform: uppercase;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            white-space: nowrap;         /* Pastikan tak pecah baris */
         }
         .number-display {
             font-size: 14.5rem;
@@ -100,40 +123,27 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
         }
         .number-changed {
             transform: scale(1.07);
             color: #fbbf24;
         }
-
-        .number-display.long-number  { font-size: 11rem; }
-        .number-display.very-long    { font-size: 8.2rem; }
+        .number-display.long-number { font-size: 11rem; }
+        .number-display.very-long { font-size: 8.2rem; }
 
         .instruction {
-            margin-top: 25px;
+            margin-top: 30px;
             font-size: 2.2rem;
             font-weight: 700;
             color: #fcd34d;
             text-shadow: 0 4px 15px rgba(252, 211, 77, 0.5);
-            letter-spacing: 1.5px;
-        }
-
-        .info-section {
-            flex: 1;
-            padding: 45px;
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            color: #1e2937;
         }
 
         .running-text {
             background: #1e2937;
             color: #e0f2fe;
             padding: 15px 0;
-            font-size: 1.7rem;
+            font-size: 1.65rem;
             font-weight: 600;
             position: fixed;
             bottom: 0;
@@ -156,7 +166,6 @@
 </head>
 <body>
 <div class="monitor-container">
-    <!-- Header -->
     <div class="header">
         <img src="/static/logo.png" alt="Logo MyKlinik" class="logo">
         <div class="text-center">
@@ -166,30 +175,18 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="main-card">
+        <!-- Nombor Giliran -->
         <div class="number-section">
             <h2 class="number-label">NOMBOR SEKARANG</h2>
             <div id="no-live" class="number-display">0</div>
-            <p class="instruction">Sila pastikan nombor anda</p>
+            <p class="instruction">Sila semak nombor giliran anda</p>
         </div>
         
+        <!-- Bahagian Iklan (Diperbaiki) -->
         <div class="info-section">
-            <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <h1 class="text-primary fw-bold mb-4 text-center">SELAMAT DATANG</h1>
-                        <p class="ad-content fs-4 text-center">Sila sediakan MyKad atau dokumen pengenalan anda semasa dipanggil.</p>
-                    </div>
-                    <div class="carousel-item">
-                        <h1 class="text-success fw-bold mb-4 text-center">INFO PENTING</h1>
-                        <p class="ad-content fs-4 text-center">Amalkan cuci tangan dan pakai pelitup muka di kawasan klinik.</p>
-                    </div>
-                    <div class="carousel-item">
-                        <h1 class="text-danger fw-bold mb-4 text-center">WAKTU OPERASI</h1>
-                        <p class="ad-content fs-4 text-center">Isnin – Jumaat: 8:00 pagi – 10:00 malam<br>Sabtu & Ahad: 9:00 pagi – 5:00 petang</p>
-                    </div>
-                </div>
+            <div id="carouselIklan" class="carousel slide" data-bs-ride="carousel" data-bs-interval="15000">
+                <div class="carousel-inner" id="carousel-content"></div>
             </div>
         </div>
     </div>
@@ -215,6 +212,86 @@ function kemaskiniMasa() {
     document.getElementById('tarikh-hari-ini').innerText = tarikh;
 }
 
+
+// Load Iklan
+function loadIklan() {
+    fetch('/api/iklan_carousel')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('carousel-content');
+            container.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="carousel-item active">
+                        <h1 class="text-primary fw-bold">SELAMAT DATANG</h1>
+                        <p class="fs-4">Tiada iklan dikonfigurasi. Sila tambah slide di Admin Dashboard.</p>
+                    </div>`;
+                return;
+            }
+
+            data.forEach((slide, index) => {
+                let slideHTML = '';
+
+                if (slide.type === 'image' && slide.image_url) {
+                    slideHTML = `
+                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <img src="${slide.image_url}" alt="${slide.title}">
+                            <h1 class="${slide.color || 'text-primary'} fw-bold mt-4">${slide.title}</h1>
+                            ${slide.content ? `<p class="fs-4 mt-3">${slide.content}</p>` : ''}
+                        </div>`;
+                } 
+                else if (slide.type === 'video' && slide.video_url) {
+                    // Bersihkan URL dan tambah parameter auto play + mute
+                    let videoUrl = slide.video_url.trim();
+
+                    // Buang parameter ?si=... jika ada
+                    if (videoUrl.includes('?si=')) {
+                        videoUrl = videoUrl.split('?si=')[0];
+                    }
+                    if (videoUrl.includes('&si=')) {
+                        videoUrl = videoUrl.split('&si=')[0];
+                    }
+
+                    // Tambah autoplay dan mute
+                    if (videoUrl.includes('?')) {
+                        videoUrl += '&autoplay=1&mute=1';
+                    } else {
+                        videoUrl += '?autoplay=1&mute=1';
+                    }
+
+                    slideHTML = `
+                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <iframe class="carousel-video" 
+                                    src="${videoUrl}"
+                                    frameborder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen></iframe>
+                            <h1 class="${slide.color || 'text-primary'} fw-bold mt-4">${slide.title}</h1>
+                        </div>`;
+                } 
+                else {
+                    // Teks sahaja
+                    slideHTML = `
+                        <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                            <h1 class="${slide.color || 'text-primary'} fw-bold mb-4">${slide.title}</h1>
+                            ${slide.content ? `<p class="fs-4">${slide.content}</p>` : ''}
+                        </div>`;
+                }
+
+                container.innerHTML += slideHTML;
+            });
+        })
+        .catch(err => {
+            console.error("Gagal load iklan:", err);
+            document.getElementById('carousel-content').innerHTML = `
+                <div class="carousel-item active">
+                    <h1 class="text-danger fw-bold">RALAT</h1>
+                    <p class="fs-4">Gagal memuat iklan. Semak sambungan.</p>
+                </div>`;
+        });
+}
+
 // Nombor Giliran
 let nomborSebelum = 0;
 function kemaskiniNombor() {
@@ -227,13 +304,7 @@ function kemaskiniNombor() {
             if (nomborBaru !== nomborSebelum) {
                 el.classList.add('number-changed');
                 setTimeout(() => el.classList.remove('number-changed'), 800);
-
                 el.textContent = nomborBaru;
-
-                el.classList.remove('long-number', 'very-long');
-                const digitCount = nomborBaru.toString().length;
-                if (digitCount >= 4) el.classList.add('very-long');
-                else if (digitCount >= 3) el.classList.add('long-number');
 
                 if (nomborBaru > nomborSebelum && nomborBaru > 0) {
                     const utterance = new SpeechSynthesisUtterance(`Nombor ${nomborBaru}, sila gunakan MyKad anda.`);
@@ -247,10 +318,14 @@ function kemaskiniNombor() {
         .catch(err => console.error("Gagal ambil nombor:", err));
 }
 
+// Jalankan
 setInterval(kemaskiniMasa, 1000);
 setInterval(kemaskiniNombor, 2500);
+setInterval(loadIklan, 100000);
+
 kemaskiniMasa();
 kemaskiniNombor();
+loadIklan();
 </script>
 </body>
 </html>
