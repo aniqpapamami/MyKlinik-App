@@ -4,45 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Giliran | MyKlinik</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
     <style>
-        body { background: #f8f9fa; font-family: 'Inter', sans-serif; padding-bottom: 80px; }
-        .header-biru { 
-            background: linear-gradient(135deg, #0d6efd, #1a2a6c); 
-            color: white; 
-            padding: 50px 20px 40px; 
-            text-align: center; 
+        body { 
+            background: #f8f9fa; 
+            font-family: 'Inter', sans-serif; 
+            padding-bottom: 80px; 
         }
-        .kad { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 20px; 
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1); 
+        .header-biru {
+            background: linear-gradient(135deg, #0d6efd, #1a2a6c);
+            color: white;
+            padding: 50px 20px 40px;
+            text-align: center;
         }
-        .input-style { 
-            width: 100%; height: 52px; padding: 12px 15px; 
-            border: 1px solid #ced4da; border-radius: 10px; font-size: 16px; 
+        .kad {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
-        .btn-daftar { 
-            width: 100%; padding: 16px; font-size: 18px; 
-            font-weight: bold; border-radius: 12px; 
+        .input-style {
+            width: 100%; 
+            height: 52px; 
+            padding: 12px 15px;
+            border: 1px solid #ced4da; 
+            border-radius: 10px; 
+            font-size: 16px;
         }
-        .info-saya { 
-            background: #e3f2fd; 
-            border-left: 6px solid #0d6efd; 
+        .btn-daftar {
+            width: 100%; 
+            padding: 16px; 
+            font-size: 18px;
+            font-weight: bold; 
+            border-radius: 12px;
         }
-        .number-big {
-            font-size: 4.5rem;
-            font-weight: 900;
-            color: #1a2a6c;
+        .info-saya {
+            background: #e3f2fd;
+            border-left: 6px solid #0d6efd;
         }
-        .blink { animation: blink 1.2s infinite; }
-        @keyframes blink { 50% { opacity: 0.4; } }
-
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -66,6 +66,9 @@
             color: #0d6efd;
         }
     </style>
+</head>
+<body>
+
 <div class="header-biru">
     <h2>MYKLINIK</h2>
     <p>Pendaftaran Giliran Digital</p>
@@ -76,7 +79,7 @@
     <!-- Borang Daftar -->
     <div id="section-daftar" class="kad">
         <h3 class="text-center mb-4">Daftar Giliran Baru</h3>
-        
+       
         <div class="mb-3">
             <label class="form-label fw-bold">NAMA PENUH</label>
             <input type="text" id="nama" class="input-style" placeholder="Masukkan nama penuh anda">
@@ -85,9 +88,14 @@
             <label class="form-label fw-bold">NO. KAD PENGENALAN (IC)</label>
             <input type="text" id="no_ic" class="input-style" placeholder="Contoh: 981212-05-0505">
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
             <label class="form-label fw-bold">NO. TELEFON (HP)</label>
-            <input type="tel" id="no_hp" class="input-style" placeholder="Contoh: 0136547895">
+            <input type="tel" id="no_hp" class="input-style" placeholder="Contoh: 013-12345678">
+        </div>
+        <div class="mb-4">
+            <label class="form-label fw-bold">No. WhatsApp</label>
+            <input type="tel" id="phone" class="input-style" placeholder="6012-12345678">
+            <div class="form-text">Kami akan hantar notifikasi ke WhatsApp anda.</div>
         </div>
 
         <button onclick="hantarDaftar()" id="btn-submit" class="btn btn-primary btn-daftar">
@@ -95,17 +103,32 @@
         </button>
     </div>
 
-    <!-- Status Giliran -->
+    <!-- Mesej Menunggu Pengesahan -->
+    <div id="mesej-pending" class="kad info-saya mt-3" style="display: none;">
+        <div class="text-center py-4">
+            <i class="bi bi-hourglass-split text-warning" style="font-size: 3.5rem;"></i>
+            <h4 class="mt-3 text-warning">Menunggu Pengesahan</h4>
+            <p>Terima kasih, <strong id="nama-pending"></strong></p>
+            <div class="alert alert-warning mt-3">
+                Pendaftaran anda telah diterima.<br>
+                <strong>Sila tunggu pengesahan dari staff kaunter.</strong><br>
+                Nombor giliran akan dihantar ke WhatsApp anda selepas disahkan.
+            </div>
+            <button onclick="kembaliKeDaftar()" class="btn btn-outline-primary mt-3">
+                <i class="bi bi-arrow-left-circle"></i> Daftar Giliran Baru
+            </button>
+        </div>
+    </div>
+
+    <!-- Status Giliran (selepas disahkan) -->
     <div id="info-saya" class="kad info-saya mt-3" style="display: none;">
         <h5 class="text-center text-primary mb-2">Nombor Giliran Anda</h5>
         <div id="no-saya" class="number-big text-center mb-3"></div>
-        
         <div id="status-pesakit" class="text-center fs-4 fw-bold mb-2"></div>
         <div id="baki-orang" class="text-center fs-5 mb-4"></div>
-
         <div class="text-center">
             <button onclick="kembaliKeDaftar()" class="btn btn-outline-primary px-5">
-                <i class="bi bi-arrow-left-circle"></i> Daftar Giliran Baru
+                Daftar Giliran Baru
             </button>
         </div>
     </div>
@@ -130,46 +153,57 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
+// ==================== GLOBAL ====================
 let noSayaGlobal = null;
+let statusSayaGlobal = null;
+let noSemasaGlobal = null; // untuk simpan no semasa dari kaunter
+let dahBagiNotis3Orang = false; // elak spam notifikasi
 
-function get_today() {
-    const now = new Date();
-    return now.toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
-}
-
+// ==================== HANTAR DAFTAR ====================
 function hantarDaftar() {
     const nama = document.getElementById('nama').value.trim();
-    const ic = document.getElementById('no_ic').value.trim();
-    const hp = document.getElementById('no_hp').value.trim();
+    const no_ic = document.getElementById('no_ic').value.trim();
+    const no_hp = document.getElementById('no_hp').value.trim();
+    const whatsapp = document.getElementById('phone').value.trim().replace(/[^0-9]/g, '');
 
-    if (!nama || !ic || !hp) {
-        alert("Sila isi semua maklumat!");
+    if (!nama || !no_ic || !no_hp) {
+        alert("Sila isi Nama, No IC dan No Telefon!");
         return;
     }
 
     const btn = document.getElementById('btn-submit');
     btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Mendaftarkan...`;
+    btn.innerHTML = 'Mendaftarkan...';
 
     fetch('/api/daftar', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({nama, no_ic: ic, no_hp: hp})
+        body: JSON.stringify({
+            nama: nama,
+            no_ic: no_ic,
+            no_hp: no_hp,
+            whatsapp: whatsapp || no_hp,
+            status: 'menunggu_pengesahan'
+        })
     })
     .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            noSayaGlobal = data.no_giliran;
-            localStorage.setItem('no_saya', noSayaGlobal);
-            localStorage.setItem('nama_saya', data.nama);
-            tampilStatus(noSayaGlobal, data.nama);
+    .then(result => {
+        if (result.success) {
+            localStorage.setItem('id_pendaftaran', result.id);
+            localStorage.setItem('nama_saya', nama);
+
+            document.getElementById('nama-pending').textContent = nama;
+            document.getElementById('section-daftar').style.display = 'none';
+            document.getElementById('mesej-pending').style.display = 'block';
         } else {
-            alert(data.message || "Gagal mendaftar");
+            alert(result.message || "Gagal mendaftar");
         }
     })
-    .catch(() => alert("Ralat sambungan"))
+    .catch(err => {
+        console.error(err);
+        alert("Ralat sambungan. Sila cuba lagi.");
+    })
     .finally(() => {
         btn.disabled = false;
         btn.innerHTML = "DAFTAR SEKARANG";
@@ -182,79 +216,224 @@ function tampilStatus(no, nama) {
     document.getElementById('no-saya').innerText = no;
 }
 
-function kembaliKeDaftar() {
-    localStorage.removeItem('no_saya');
-    localStorage.removeItem('nama_saya');
-    noSayaGlobal = null;
-    document.getElementById('info-saya').style.display = 'none';
-    document.getElementById('section-daftar').style.display = 'block';
-    
-    // Kosongkan input
-    document.getElementById('nama').value = '';
-    document.getElementById('no_ic').value = '';
-    document.getElementById('no_hp').value = '';
-}
+// ==================== SEMAK & PAPAR STATUS PESAKIT ====================
+function semakStatusPendaftaran() {
+    const idPendaftaran = localStorage.getItem('id_pendaftaran');
+    const savedNo = localStorage.getItem('no_saya');
 
-function kemaskiniStatusPesakit() {
-    if (!noSayaGlobal) return;
+    if (!idPendaftaran && !savedNo) return;
 
-    fetch(`/api/get_senarai_tarikh/${get_today()}`)
+    const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
+
+    fetch(`/api/get_senarai_tarikh/${today}`)
         .then(res => res.json())
-        .then(senarai => {
-            const pesakitSaya = senarai.find(p => String(p.no_giliran) === String(noSayaGlobal));
-            if (!pesakitSaya) return;
+        .then(rawData => {
+            let senarai = [];
+            if (Array.isArray(rawData)) {
+                senarai = rawData.filter(item => item !== null);
+            } else if (rawData && typeof rawData === 'object') {
+                senarai = Object.values(rawData).filter(item => item !== null);
+            }
 
-            const statusEl = document.getElementById('status-pesakit');
-            const bakiEl = document.getElementById('baki-orang');
+            let pesakit = null;
 
-            if (pesakitSaya.status === 'selesai') {
-                statusEl.innerHTML = `<span class="text-success">✓ Rawatan TELAH SELESAI</span>`;
-                bakiEl.innerHTML = "Terima kasih kerana menggunakan MyKlinik";
-            } 
-            else if (pesakitSaya.status === 'tidak_hadir') {
-                statusEl.innerHTML = `<span class="text-danger">✗ Anda ditanda TIDAK HADIR</span>`;
-                bakiEl.innerHTML = "";
-            } 
-            else {
-                fetch('/api/status_live')
-                    .then(res => res.json())
-                    .then(live => {
-                        const baki = pesakitSaya.no_giliran - (live.nombor_sekarang || 0);
+            if (idPendaftaran) {
+                pesakit = senarai.find(p => p && p.id === idPendaftaran);
+            } else if (savedNo) {
+                pesakit = senarai.find(p => p && p.no_giliran == savedNo);
+            }
 
-                        if (baki > 3) {
-                            bakiEl.innerHTML = `Lagi <strong>${baki}</strong> orang di hadapan`;
-                            statusEl.innerHTML = "Sila bersabar";
-                        } else if (baki > 0) {
-                            bakiEl.innerHTML = `⚠️ TINGGAL <strong>${baki}</strong> ORANG LAGI`;
-                            bakiEl.classList.add('text-danger', 'blink');
-                            statusEl.innerHTML = "Sila bersiap untuk masuk";
-							
-							// **Amaran suara AUTO** (tidak perlu button)
-                            const utterance = new SpeechSynthesisUtterance(`Nombor ${noSayaGlobal}, tinggal ${baki} orang lagi. Sila bersiap.`);
-                            utterance.lang = 'ms-MY';
-                            window.speechSynthesis.speak(utterance);
-                        } else {
-                            bakiEl.innerHTML = `🎉 GILIRAN ANDA SEKARANG!`;
-                            statusEl.innerHTML = "Sila masuk ke Bilik Rawatan";
-                        }
-                    });
+            if (pesakit) {
+                if (pesakit.no_giliran && !savedNo) {
+                    localStorage.setItem('no_saya', pesakit.no_giliran);
+                }
+                tampilStatusPesakit(pesakit);
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => console.error("Error semak status:", err));
 }
 
-// Auto refresh setiap 4 saat
-setInterval(kemaskiniStatusPesakit, 4000);
+// ==================== PAPAR STATUS DENGAN MESEJ & SUARA ====================
+function tampilStatusPesakit(p) {
+    const no = p.no_giliran || noSayaGlobal;
+    const status = p.status || 'menunggu';
+    noSayaGlobal = no; // update global
 
-// Load semula jika ada nombor tersimpan
+    // Sembunyikan bahagian yang tak perlu
+    document.getElementById('section-daftar').style.display = 'none';
+    document.getElementById('mesej-pending').style.display = 'none';
+    document.getElementById('info-saya').style.display = 'block';
+
+    document.getElementById('no-saya').innerText = no;
+
+    const statusEl = document.getElementById('status-pesakit');
+    const bakiEl = document.getElementById('baki-orang');
+
+    if (status === 'sedang_dirawat') {
+        statusEl.className = 'fs-4 fw-bold mb-2 text-primary';
+        statusEl.innerHTML = `<i class="bi bi-mic-fill"></i> GILIRAN ANDA SEKARANG!`;
+        bakiEl.innerHTML = `<div class="alert alert-primary">Sila masuk ke bilik rawatan sekarang.</div>`;
+
+        // Suara buzzer
+        panggilSuara(`Nombor ${no}, sila masuk untuk rawatan.`);
+
+    } else if (status === 'selesai') {
+        statusEl.className = 'fs-4 fw-bold mb-2 text-success';
+        statusEl.innerHTML = `<i class="bi bi-check-circle-fill"></i> PEMERIKSAAN SELESAI`;
+        bakiEl.innerHTML = `<div class="alert alert-success">Terima kasih kerana datang ke MyKlinik.<br>Sila ambil ubat atau resit jika perlu.</div>`;
+
+    } else if (status === 'tidak_hadir') {
+        statusEl.className = 'fs-4 fw-bold mb-2 text-danger';
+        statusEl.innerHTML = `<i class="bi bi-x-circle-fill"></i> NOMOR DIBATALKAN`;
+        bakiEl.innerHTML = `
+            <div class="alert alert-danger">
+                Anda telah ditandakan <strong>tidak hadir</strong>.<br>
+                Sila daftar nombor giliran baru.
+            </div>
+            <button onclick="kembaliKeDaftar()" class="btn btn-primary mt-2 w-100">Daftar Nombor Baru</button>`;
+        localStorage.removeItem('no_saya');
+
+    } else {
+        // Masih menunggu - KIRA BAKI ORANG
+        statusEl.className = 'fs-4 fw-bold mb-2 text-warning';
+        statusEl.innerHTML = `<i class="bi bi-hourglass-split"></i> MENUNGGU GILIRAN`;
+
+        // Dapatkan no semasa dari API / kaunter
+        semakNoSemasaDanKiraBaki(no);
+    }
+}
+
+// ==================== SEMAK NO SEMASA & TRIGGER NOTIS 3 ORANG ====================
+function semakNoSemasaDanKiraBaki(noSaya) {
+    const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
+
+    // API ni sama macam API awak pakai untuk dapat senarai
+    fetch(`/api/get_senarai_tarikh/${today}`)
+       .then(res => res.json())
+       .then(rawData => {
+            let senarai = [];
+            if (Array.isArray(rawData)) {
+                senarai = rawData.filter(item => item!== null);
+            } else if (rawData && typeof rawData === 'object') {
+                senarai = Object.values(rawData).filter(item => item!== null);
+            }
+
+            // Cari no yang status 'sedang_dirawat' = no semasa
+            const sedangDirawat = senarai.find(p => p && p.status === 'sedang_dirawat');
+            if (sedangDirawat && sedangDirawat.no_giliran) {
+                noSemasaGlobal = parseInt(sedangDirawat.no_giliran);
+                kiraBakiDanNotis(parseInt(noSaya), noSemasaGlobal);
+            } else {
+                // Kalau takde orang dirawat, ambil no terakhir 'selesai' + 1
+                const selesai = senarai.filter(p => p && p.status === 'selesai')
+                                     .sort((a,b) => b.no_giliran - a.no_giliran)[0];
+                noSemasaGlobal = selesai? parseInt(selesai.no_giliran) + 1 : 1;
+                kiraBakiDanNotis(parseInt(noSaya), noSemasaGlobal);
+            }
+        })
+       .catch(err => console.error("Error semak no semasa:", err));
+}
+
+function kiraBakiDanNotis(noSaya, noSemasa) {
+    const bakiEl = document.getElementById('baki-orang');
+    const baki = noSaya - noSemasa;
+
+    if (baki > 0) {
+        bakiEl.innerHTML = `
+            Nombor semasa: <strong>${noSemasa}</strong><br>
+            Baki <strong>${baki} orang</strong> sebelum giliran anda
+        `;
+
+        // TRIGGER NOTIFIKASI BILA TINGGAL 3 ORANG
+        if (baki === 3 &&!dahBagiNotis3Orang) {
+            dahBagiNotis3Orang = true; // jangan spam
+            triggerNotis3Orang(noSaya);
+        }
+
+        // Reset flag kalau baki dah jadi 4 balik, contoh staf skip nombor
+        if (baki > 3) dahBagiNotis3Orang = false;
+
+    } else if (baki === 0) {
+        bakiEl.innerHTML = `<div class="alert alert-info">Nombor semasa sama dengan nombor anda. Sila bersedia.</div>`;
+    } else {
+        bakiEl.innerHTML = `<div class="alert alert-secondary">Nombor anda telah dipanggil.</div>`;
+    }
+}
+
+// ==================== FUNGSI NOTIS 3 ORANG ====================
+function triggerNotis3Orang(no) {
+    const mesej = `No giliran ${no}, lagi 3 orang. Sila berada di klinik segera.`;
+
+    // 1. Tukar UI jadi warna oren + warning
+    const bakiEl = document.getElementById('baki-orang');
+    bakiEl.innerHTML = `
+        <div class="alert alert-warning border-3">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>PERHATIAN!</strong><br>
+            Lagi <strong>3 orang</strong> sebelum giliran anda<br>
+            Sila berada di klinik sekarang
+        </div>
+    `;
+
+    // 2. Main bunyi "ting-tong"
+    document.getElementById('bunyi-reminder-staf').play();
+
+    // 3. Browser Notification kalau user bagi permission
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("MyKlinik: Giliran Hampir Tiba", {
+            body: mesej,
+            icon: '/logo.png' // tukar ikut logo awak
+        });
+    } else if ("Notification" in window && Notification.permission!== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("MyKlinik: Giliran Hampir Tiba", { body: mesej });
+            }
+        });
+    }
+
+    // 4. Text-to-Speech
+    panggilSuara(`Perhatian. Nombor giliran ${no}, lagi tiga orang. Sila bersedia di klinik.`);
+}
+
+// Helper untuk suara
+function panggilSuara(teks) {
+    const utterance = new SpeechSynthesisUtterance(teks);
+    utterance.lang = 'ms-MY';
+    utterance.rate = 0.92;
+    window.speechSynthesis.speak(utterance);
+}
+
+// ==================== KEMBALI ====================
+function kembaliKeDaftar() {
+    localStorage.clear();
+    location.reload();
+}
+
+// ==================== INIT ====================
 window.onload = function() {
     const savedNo = localStorage.getItem('no_saya');
+    const savedId = localStorage.getItem('id_pendaftaran');
+
     if (savedNo) {
-        noSayaGlobal = savedNo;
-        tampilStatus(savedNo, localStorage.getItem('nama_saya'));
-        kemaskiniStatusPesakit();
+        tampilStatusPesakit({no_giliran: savedNo, status: 'menunggu'});
+    } else if (savedId) {
+        document.getElementById('section-daftar').style.display = 'none';
+        document.getElementById('mesej-pending').style.display = 'block';
+    }
+
+    // Minta permission notification awal2
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
     }
 };
+
+// Auto semak status setiap 4 saat
+setInterval(semakStatusPendaftaran, 4000);
 </script>
+<body>
+<audio id="bunyi-reminder-staf" preload="auto">
+    <source src="https://assets.mixkit.co/active_storage/sfx/235/235-preview.mp3" type="audio/mpeg">
+</audio>
 </body>
 </html>

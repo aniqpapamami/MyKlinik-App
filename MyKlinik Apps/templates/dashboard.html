@@ -7,153 +7,252 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
-        body { background: #f4f7f6; font-family: 'Inter', system-ui, sans-serif; }
-        .nav-admin { background: #1a2a6c; padding: 15px; color: white; }
-        .stat-card { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .section-container { 
-            background: white; 
-            border-radius: 15px; 
-            padding: 25px; 
-            margin-bottom: 30px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
-        }
-        .btn-panggil { 
-            font-size: 1.5rem; 
-            padding: 15px; 
-            border-radius: 12px; 
-            font-weight: bold; 
-        }
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: white;
-            box-shadow: 0 -3px 15px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        .nav-item {
-            color: #6c757d;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .nav-item i {
-            font-size: 24px;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .nav-item.active {
-            color: #0d6efd;
-        }
+        body { background: #f1f5f9; }
+        .section-container { background: white; border-radius: 15px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .stat-card { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-radius: 15px; padding: 20px; }
+        .nav-tabs .nav-link { font-weight: 600; color: #64748b; }
+        .nav-tabs .nav-link.active { color: #3b82f6; border-bottom: 3px solid #3b82f6; }
     </style>
 </head>
 <body>
-<nav class="nav-admin shadow-sm mb-4">
-    <div class="container d-flex justify-content-between align-items-center">
-        <span class="h4 mb-0"><i class="bi bi-hospital"></i> MyKlinik Admin</span>
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark"><i class="bi bi-speedometer2"></i> Admin Dashboard</h2>
         <div>
-            <a href="#section-carian" class="btn btn-warning btn-sm me-2"><i class="bi bi-search"></i> Cari Rekod</a>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Log Keluar</a>
-        </div>
-    </div>
-</nav>
-
-<div class="container">
-
-    <!-- Statistik -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card stat-card p-4 h-100 text-center bg-white">
-                <h6 class="text-muted fw-bold">NOMBOR SEKARANG</h6>
-                <h1 id="no-live" class="display-1 fw-bold text-primary">0</h1>
-                <button onclick="panggilNext()" class="btn btn-primary btn-panggil w-100 mt-3 shadow">
-                    <i class="bi bi-megaphone-fill"></i> PANGGIL SETERUSNYA
-                </button>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card stat-card p-4 h-100 text-center bg-white border-start border-primary border-5">
-                <h6 class="text-muted fw-bold">JUMLAH PENDAFTAR HARI INI</h6>
-                <h1 id="total-daftar" class="display-3 fw-bold text-dark">0</h1>
-                <p class="text-secondary mt-2">Tarikh: <span id="current-date" class="badge bg-light text-dark border">---</span></p>
-            </div>
+            <a href="/monitor" target="_blank" class="btn btn-outline-primary me-2"><i class="bi bi-display"></i> Buka Monitor</a>
+            <a href="/logout" class="btn btn-outline-danger"><i class="bi bi-box-arrow-right"></i> Log Keluar</a>
         </div>
     </div>
 
-    <!-- Senarai Pesakit Hari Ini -->
-    <div class="section-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-primary m-0"><i class="bi bi-people-fill"></i> Senarai Pesakit Hari Ini</h4>
-            <span class="badge bg-success bg-opacity-10 text-success border border-success">Auto-Update: ON</span>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>No Giliran</th>
-                        <th>Nama Pesakit</th>
-                        <th>No. IC</th>
-                        <th>No. Telefon</th>
-                        <th>Waktu Daftar</th>
-                        <th>Status</th>
-                        <th class="text-center">Tindakan</th>
-                    </tr>
-                </thead>
-                <tbody id="senarai-hari-ini"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Carian Rekod Lama -->
-    <div id="section-carian" class="section-container border-top border-warning border-5">
-        <h4 class="fw-bold mb-4"><i class="bi bi-calendar-event"></i> Semak Rekod Pesakit Lama</h4>
-        <div class="row g-2 mb-4">
-            <div class="col-md-8">
-                <input type="date" id="tarikh-cari" class="form-control form-control-lg">
-            </div>
-            <div class="col-md-4">
-                <button onclick="cariRekodLama()" class="btn btn-dark btn-lg w-100">
-                    <i class="bi bi-search"></i> Cari Rekod
-                </button>
-            </div>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle">
-                <thead class="table-secondary text-center">
-                    <tr>
-                        <th>No</th>
-                        <th>Nama Pesakit</th>
-                        <th>No. IC</th>
-                        <th>No. Telefon</th>
-                        <th>Waktu Daftar</th>
-                        <th>Status</th>
-                        <th class="text-center">Detail</th>
-                    </tr>
-                </thead>
-                <tbody id="hasil-carian-lama"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ==================== URUS CAROUSEL IKLan ==================== -->
-    <div class="section-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-primary m-0">
-                <i class="bi bi-images"></i> Urus Iklan di Monitor Giliran
-            </h4>
-            <button onclick="tambahSlideBaru()" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Tambah Slide Baru
+    <!-- NAV TABS -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="operasi-tab" data-bs-toggle="tab" data-bs-target="#operasi" type="button">
+                <i class="bi bi-hospital"></i> Operasi Harian
             </button>
-        </div>
-        <div id="senarai-slides" class="list-group">
-            <!-- Slides akan dimuat oleh JavaScript -->
-        </div>
-    </div>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="carian-tab" data-bs-toggle="tab" data-bs-target="#carian" type="button">
+                <i class="bi bi-search"></i> Carian & Laporan
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="iklan-tab" data-bs-toggle="tab" data-bs-target="#iklan" type="button">
+                <i class="bi bi-images"></i> Urus Iklan Monitor
+            </button>
+        </li>
+    </ul>
 
+    <!-- TAB CONTENT -->
+    <div class="tab-content" id="dashboardTabsContent">
+        
+        <!-- TAB 1: OPERASI HARIAN -->
+        <div class="tab-pane fade show active" id="operasi" role="tabpanel">
+            
+            <!-- Statistik + Panggil -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card stat-card p-4 h-100 text-center bg-white">
+                        <h6 class="text-muted fw-bold">NOMBOR SEKARANG</h6>
+                        <h1 id="no-live" class="display-1 fw-bold text-dark">0</h1>
+                        <button onclick="panggilNext()" class="btn btn-primary btn-lg w-100 mt-3 shadow">
+                            <i class="bi bi-megaphone-fill"></i> PANGGIL SETERUSNYA
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card stat-card p-4 h-100 text-center bg-white border-start border-primary border-5">
+                        <h6 class="text-muted fw-bold">JUMLAH PENDAFTAR HARI INI</h6>
+                        <h1 id="total-daftar" class="display-3 fw-bold text-dark">0</h1>
+                        <p class="text-secondary mt-2">Tarikh: <span id="current-date" class="badge bg-light text-dark border">---</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daftar Walk-In -->
+            <div class="section-container border-top border-success border-5">
+                <h4 class="fw-bold text-success mb-4"><i class="bi bi-person-plus-fill"></i> Daftar Pesakit Walk-In</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Nama Penuh Pesakit *</label>
+                        <input type="text" id="daftar-nama" class="form-control form-control-lg" placeholder="Cth: Ali Bin Abu">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">No. Kad Pengenalan *</label>
+                        <input type="text" id="daftar-ic" class="form-control form-control-lg" placeholder="Cth: 901231-01-1234">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">No. Telefon</label>
+                        <input type="text" id="daftar-hp" class="form-control form-control-lg" placeholder="Cth: 012-3456789">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button onclick="daftarWalkin()" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> Daftar
+                        </button>
+                    </div>
+                </div>
+                <div id="result-daftar" class="mt-3"></div>
+            </div>
+             
+			<!-- ==================== RUANGAN MENUNGGU PENGESAHAN ==================== -->
+            <div class="section-container border-start border-5 border-warning mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-warning m-0">
+                        <i class="bi bi-hourglass-split"></i> Menunggu Pengesahan
+                    </h4>
+                    <span id="jumlah-menunggu" class="badge bg-warning text-dark fs-6">0</span>
+                </div>
+    
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-warning">
+                            <tr>
+                                <th>Nama Pesakit</th>
+                                <th>No. IC</th>
+                                <th>No. Telefon</th>
+                                <th>Masa Daftar</th>
+                                <th class="text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="senarai-menunggu-pengesahan"></tbody>
+                    </table>
+                </div>
+            </div>
+						 
+			<!-- TAMBAHAN BARU: Modal WhatsApp Tinggal 3 Orang -->
+            <div class="modal fade" id="modalWhatsapp" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title">Notifikasi Giliran Hampir</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning">
+                                    <strong id="notifNama"></strong> <br>
+                                    No Giliran: <strong id="notifNoGiliran"></strong><br>
+                                    Tinggal <strong>3 orang</strong> lagi untuk dipanggil.
+                                </div>
+                                <p>No WhatsApp: <strong id="notifPhone"></strong></p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                <a id="btnHantarWA" target="_blank" class="btn btn-success">
+                                    <i class="bi bi-whatsapp"></i> Buka WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+			 
+            <!-- Senarai Pesakit Hari Ini -->
+            <div class="section-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-primary m-0"><i class="bi bi-people-fill"></i> Senarai Pesakit Hari Ini</h4>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success">Auto-Update: ON</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No Giliran</th>
+                                <th>Nama Pesakit</th>
+                                <th>No. IC</th>
+                                <th>No. Telefon</th>
+                                <th>Waktu Daftar</th>
+                                <th>Status</th>
+                                <th class="text-center">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="senarai-hari-ini"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: CARIAN & LAPORAN -->
+        <div class="tab-pane fade" id="carian" role="tabpanel">
+            
+            <!-- Export Laporan -->
+            <div class="section-container">
+                <h4 class="fw-bold text-primary mb-4"><i class="bi bi-download"></i> Export Laporan Harian</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Pilih Tarikh Laporan</label>
+                        <input type="date" id="tarikh-export" class="form-control form-control-lg">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a id="btn-excel" href="#" class="btn btn-success btn-lg w-100" target="_blank">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </a>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <a id="btn-pdf" href="#" class="btn btn-danger btn-lg w-100" target="_blank">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carian Pesakit Lama -->
+            <div class="section-container">
+                <h4 class="fw-bold text-primary mb-4"><i class="bi bi-search"></i> Carian Pesakit Lama</h4>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Tarikh</label>
+                        <input type="date" id="carian-tarikh" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">No IC Pesakit</label>
+                        <input type="text" id="carian-ic" class="form-control" placeholder="Cth: 901231-01-1234">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nama Pesakit</label>
+                        <input type="text" id="carian-nama" class="form-control" placeholder="Cth: Ali">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button onclick="cariPesakitLama()" class="btn btn-primary w-100"><i class="bi bi-search"></i> Cari</button>
+                    </div>
+                </div>
+                <div id="hasil-carian" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombor</th>
+                                <th>Nama Pesakit</th>
+                                <th>Waktu Daftar</th>
+                                <th>Status</th>
+                                <th class="text-center">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hasil-carian-lama"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: URUS IKLAN -->
+        <div class="tab-pane fade" id="iklan" role="tabpanel">
+            <div class="section-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-primary m-0">
+                        <i class="bi bi-images"></i> Urus Iklan di Monitor Giliran
+                    </h4>
+                    <button onclick="tambahSlideBaru()" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Tambah Slide Baru
+                    </button>
+                </div>
+                <div id="senarai-slides" class="list-group">
+                    <!-- Slides akan dimuat oleh JavaScript -->
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<!-- Modal Edit / Tambah Slide (Versi yang disokong gambar & video) -->
+<!-- Modal Edit / Tambah Slide -->
 <div class="modal fade" id="modalSlide" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -163,7 +262,6 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="slide_id">
-
                 <div class="mb-3">
                     <label class="form-label">Jenis Slide</label>
                     <select id="slide_type" class="form-select" onchange="toggleSlideFields()">
@@ -172,12 +270,15 @@
                         <option value="video">Video (YouTube)</option>
                     </select>
                 </div>
-
+                <div class="mb-3">
+                    <label class="form-label">Durasi Paparan (saat)</label>
+                    <input type="number" id="slide_duration" class="form-control" value="12" min="5" max="300">
+                    <small class="text-muted" id="duration_help">Teks/Gambar: 12s. Video: ikut panjang sebenar video</small>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">Tajuk Slide</label>
                     <input type="text" id="slide_title" class="form-control">
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">Warna Tajuk</label>
                     <select id="slide_color" class="form-select">
@@ -187,251 +288,409 @@
                         <option value="text-warning">Kuning</option>
                     </select>
                 </div>
-
-                <!-- Field untuk Teks -->
                 <div id="field_text" class="mb-3">
                     <label class="form-label">Kandungan Teks</label>
                     <textarea id="slide_content" class="form-control" rows="3"></textarea>
                 </div>
-
-                <!-- Field untuk Gambar -->
                 <div id="field_image" class="mb-3" style="display:none;">
                     <label class="form-label">URL Gambar</label>
                     <input type="text" id="slide_image_url" class="form-control" placeholder="https://contoh.com/gambar.jpg atau /static/gambar1.jpg">
-                    <small class="text-muted">Letak gambar di folder static dan guna URL seperti /static/poster-vaksin.jpg</small>
                 </div>
-
-                <!-- Field untuk Video -->
                 <div id="field_video" class="mb-3" style="display:none;">
                     <label class="form-label">URL Video YouTube (Embed)</label>
-                    <input type="text" id="slide_video_url" class="form-control" placeholder="https://www.youtube.com/embed/xxxxxxxx">
-                    <small class="text-muted">Contoh: https://www.youtube.com/embed/dQw4w9wgxcq</small>
+                    <input type="text" id="slide_video_url" class="form-control" placeholder="https://www.youtube.com/embed/VIDEO_ID">
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button onclick="simpanSlide()" class="btn btn-primary">Simpan Slide</button>
+                <button type="button" onclick="simpanSlide()" class="btn btn-primary">Simpan Slide</button>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Modal Detail Pesakit -->
-<div class="modal fade" id="modalDetail" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalNama">Detail Pesakit</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6"><strong>No. Giliran:</strong> <span id="modalNo"></span></div>
-                    <div class="col-md-6"><strong>Waktu Daftar:</strong> <span id="modalMasa"></span></div>
-                    <div class="col-md-6"><strong>Status:</strong> <span id="modalStatus" class="badge"></span></div>
-                    <div class="col-md-6"><strong>No. IC:</strong> <span id="modalIC"></span></div>
-                    <div class="col-md-6"><strong>No. Telefon:</strong> <span id="modalHP"></span></div>
-                    <div class="col-12"><strong>Nama Penuh:</strong> <span id="modalNamaFull" class="fw-bold"></span></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bottom Navigation -->
-<nav class="bottom-nav py-3">
-    <div class="container d-flex justify-content-around">
-        <a href="/" class="nav-item active text-center">
-            <i class="fas fa-home"></i>
-            <div>Home</div>
-        </a>
-        <a href="/monitor" class="nav-item text-center">
-            <i class="fas fa-tv"></i>
-            <div>Monitor</div>
-        </a>
-    </div>
-</nav>
-
-<footer class="bg-dark text-white text-center py-4 mt-5">
-    <p class="mb-0">© 2026 MyKlinik Management System</p>
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// ==================== FUNGSI UTAMA (Admin lama) ====================
-function panggilNext() {
-    fetch('/api/next', { method: 'POST' })
-        .then(res => res.json())
-        .then(() => kemaskiniDataHarian())
-        .catch(err => console.error(err));
-}
-
-function tukarStatus(no, statusBaru) {
-    if (!confirm(`Pastikan untuk ${statusBaru === 'selesai' ? 'selesaikan' : 'tanda tidak hadir'} nombor ${no}?`)) return;
-    fetch('/api/kemaskini_status', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ no_giliran: no, status: statusBaru })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) kemaskiniDataHarian();
-        else alert(data.message || "Gagal mengemaskini");
-    });
-}
-
-function lihatDetail(p) {
-    document.getElementById('modalNama').textContent = p.nama || 'Tiada Nama';
-    document.getElementById('modalNamaFull').textContent = p.nama || '-';
-    document.getElementById('modalNo').textContent = p.no_giliran || '-';
-    document.getElementById('modalMasa').textContent = p.masa || '-';
-    document.getElementById('modalIC').textContent = p.no_ic || '-';
-    document.getElementById('modalHP').textContent = p.no_hp || '-';
-    const statusEl = document.getElementById('modalStatus');
-    statusEl.textContent = (p.status || 'menunggu').toUpperCase();
-    if (p.status === 'selesai') statusEl.className = 'badge bg-secondary';
-    else if (p.status === 'tidak_hadir') statusEl.className = 'badge bg-dark';
-    else statusEl.className = 'badge bg-info';
-    new bootstrap.Modal(document.getElementById('modalDetail')).show();
-}
-
-// ==================== KEMASKINI DATA HARIAN ====================
+// ==================== STATISTIK LIVE + PANGGIL ====================
 function kemaskiniDataHarian() {
-    const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
-    document.getElementById('current-date').innerText = hariIni;
-
     fetch('/api/status_live')
         .then(res => res.json())
         .then(data => {
-            document.getElementById('no-live').innerText = data.nombor_sekarang || 0;
-            document.getElementById('total-daftar').innerText = data.jumlah_giliran || 0;
-        })
-        .catch(err => console.error("Error status_live:", err));
-
-    fetch(`/api/get_senarai_tarikh/${hariIni}`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('senarai-hari-ini');
-            tbody.innerHTML = '';
-            let senarai = Array.isArray(data) ? data : [];
-            senarai = senarai.filter(item => item != null && typeof item === 'object');
-            if (senarai.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Tiada pendaftaran hari ini.</td></tr>`;
-                return;
-            }
-            senarai.sort((a, b) => (a.no_giliran || 0) - (b.no_giliran || 0));
-            senarai.forEach(p => {
-                let tindakan = '';
-                if (p.status !== 'selesai' && p.status !== 'tidak_hadir') {
-                    tindakan = `
-                        <button onclick="tukarStatus(${p.no_giliran}, 'selesai')" class="btn btn-sm btn-success me-1">Selesai</button>
-                        <button onclick="tukarStatus(${p.no_giliran}, 'tidak_hadir')" class="btn btn-sm btn-danger">Tak Hadir</button>
-                    `;
-                }
-                const btnDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>`;
-                let badge = 'bg-warning text-dark';
-                if (p.status === 'selesai') badge = 'bg-secondary';
-                if (p.status === 'tidak_hadir') badge = 'bg-dark';
-                if (p.status === 'sedang_dirawat') badge = 'bg-info';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="text-center fw-bold">${p.no_giliran || '-'}</td>
-                        <td>${p.nama || 'Tiada Nama'}</td>
-                        <td>${p.no_ic || '-'}</td>
-                        <td>${p.no_hp || '-'}</td>
-                        <td>${p.masa || '-'}</td>
-                        <td><span class="badge ${badge}">${(p.status || 'menunggu').toUpperCase()}</span></td>
-                        <td class="text-center">${tindakan} ${btnDetail}</td>
-                    </tr>
-                `;
+            document.getElementById('no-live').textContent = data.nombor_sekarang || 0;
+            document.getElementById('total-daftar').textContent = data.jumlah_giliran || 0;
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('ms-MY', { 
+                day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kuala_Lumpur' 
             });
         })
-        .catch(err => {
-            console.error("Error senarai:", err);
-            document.getElementById('senarai-hari-ini').innerHTML = 
-                `<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat data senarai.</td></tr>`;
+        .catch(err => console.error("Gagal load status:", err));
+}
+
+function panggilNext() {
+    if (!confirm('Panggil nombor giliran seterusnya?')) return;
+	
+	const btn = event.target;
+    const asalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memanggil...';
+	
+    fetch('/api/next', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                kemaskiniDataHarian();
+                loadSenaraiHariIni();
+				
+                alert('Berjaya panggil nombor seterusnya!');
+            } else {
+                alert(data.message || 'Tiada pesakit menunggu lagi.');
+            }
+        })
+       .catch(err => {
+            console.error(err);
+            alert('Gagal panggil nombor. Semak sambungan.');
+        })
+       .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = asalHTML;
         });
 }
 
-function cariRekodLama() {
-    const tarikh = document.getElementById('tarikh-cari').value;
-    if (!tarikh) return alert("Sila pilih tarikh!");
+// ==================== DAFTAR WALK-IN ====================
+function daftarWalkin() {
+    const nama = document.getElementById('daftar-nama').value.trim();
+    const no_ic = document.getElementById('daftar-ic').value.trim();
+    const no_hp = document.getElementById('daftar-hp').value.trim();
+    const resultDiv = document.getElementById('result-daftar');
+   
+    if (!nama || !no_ic) {
+        resultDiv.innerHTML = '<div class="alert alert-warning">Nama dan No IC wajib diisi!</div>';
+        return;
+    }
+   
+    resultDiv.innerHTML = '<div class="alert alert-info">Sedang mendaftar...</div>';
+   
+    fetch('/api/daftar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            nama: nama, 
+            no_ic: no_ic, 
+            no_hp: no_hp || '', 
+            status: 'menunggu_pengesahan' 
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <h5><i class="bi bi-check-circle"></i> Berjaya Didaftarkan</h5>
+                    <p><strong>Nama:</strong> ${data.nama || nama}</p>
+                    <p class="mb-0">Pesakit telah dimasukkan ke ruangan <strong>Menunggu Pengesahan</strong>.</p>
+                </div>
+            `;
+
+            // Kosongkan borang
+            document.getElementById('daftar-nama').value = '';
+            document.getElementById('daftar-ic').value = '';
+            document.getElementById('daftar-hp').value = '';
+
+            // Refresh kedua-dua senarai dengan delay kecil supaya data sempat masuk
+            setTimeout(() => {
+                loadMenungguPengesahan();
+                loadSenaraiHariIni();
+                kemaskiniDataHarian();
+            }, 800);
+
+        } else {
+            resultDiv.innerHTML = `<div class="alert alert-danger">Gagal: ${data.message || 'Sila cuba lagi'}</div>`;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        resultDiv.innerHTML = '<div class="alert alert-danger">Ralat sambungan. Sila cuba lagi.</div>';
+    });
+}
+
+// TAMBAHAN BAIKI: Mask No IC untuk PDPA
+function maskIC(ic) {
+    if (!ic) return '-';
+    return ic.replace(/(\d{6})-?\d{2}-?(\d{4})/, '$1-**-$2');
+}
+
+// ==================== SENARAI PESAKIT HARI INI ====================
+function loadSenaraiHariIni() {
+    const today = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
+    
+    fetch(`/api/get_senarai_tarikh/${today}`)
+       .then(res => res.json())
+       .then(rawData => {
+            const tbody = document.getElementById('senarai-hari-ini');
+            tbody.innerHTML = '';
+
+            let senarai = [];
+
+            if (Array.isArray(rawData)) {
+                senarai = rawData.filter(item => item !== null);
+            } else if (rawData && typeof rawData === 'object') {
+                senarai = Object.values(rawData).filter(item => item !== null);
+            }
+
+            // Hanya tunjuk pesakit yang sudah ada nombor giliran
+            senarai = senarai.filter(p => p && p.no_giliran != null && p.no_giliran > 0);
+
+            if (senarai.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">Belum ada pesakit yang disahkan hari ini.</td></tr>`;
+                return;
+            }
+
+            senarai.sort((a,b) => (a.no_giliran||0) - (b.no_giliran||0)).forEach(p => {
+                const no = p.no_giliran;
+                const status = p.status || 'menunggu';
+                
+                let badgeColor = 'secondary';
+                if (status === 'menunggu') badgeColor = 'warning';
+                if (status === 'sedang_dirawat') badgeColor = 'primary';
+                if (status === 'selesai') badgeColor = 'success';
+                if (status === 'tidak_hadir') badgeColor = 'danger';
+
+                let tindakan = '';
+                if (status === 'menunggu') {
+                    tindakan = `
+                        <button onclick="tukarStatus(${no}, 'sedang_dirawat')" class="btn btn-sm btn-primary me-1">Rawat</button>
+                        <button onclick="tukarStatus(${no}, 'tidak_hadir')" class="btn btn-sm btn-outline-danger">Tidak Hadir</button>`;
+                } else if (status === 'sedang_dirawat') {
+                    tindakan = `
+                        <button onclick="tukarStatus(${no}, 'selesai')" class="btn btn-sm btn-success me-1">Selesai</button>
+                        <button onclick="tukarStatus(${no}, 'menunggu')" class="btn btn-sm btn-outline-secondary">Batal</button>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge bg-dark fs-6">${no}</span></td>
+                        <td class="fw-bold">${p.nama || '-'}</td>
+                        <td>${maskIC(p.no_ic)}</td>
+                        <td>${p.no_hp || '-'}</td>
+                        <td>${p.masa || '-'}</td>
+                        <td><span class="badge bg-${badgeColor}">${status.replace('_', ' ').toUpperCase()}</span></td>
+                        <td class="text-center">${tindakan}</td>
+                    </tr>`;
+            });
+        })
+       .catch(err => {
+            console.error("Error senarai hari ini:", err);
+            document.getElementById('senarai-hari-ini').innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Gagal memuat data senarai.</td></tr>`;
+        });
+}
+
+// ==================== LOAD SENARAI MENUNGGU PENGESAHAN ====================
+let jumlahMenungguLama = 0;
+
+function loadMenungguPengesahan() {
+    const hariIni = new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kuala_Lumpur'});
+   
+    fetch(`/api/get_senarai_tarikh/${hariIni}?t=${new Date().getTime()}`)
+       .then(res => res.json())
+       .then(senarai => {
+            const tbody = document.getElementById('senarai-menunggu-pengesahan');
+            tbody.innerHTML = '';
+
+            let filtered = senarai.filter(p => p && 
+                (p.status === 'menunggu_pengesahan' || p.status === 'pending')
+            );
+
+            // TAMBAHAN BAIKI: Main bunyi kalau ada pesakit baru masuk
+            if (filtered.length > jumlahMenungguLama) {
+                document.getElementById('bunyi-reminder-staf').play();
+                console.log('Pesakit baru masuk:', filtered.length - jumlahMenungguLama, 'orang');
+            }
+            jumlahMenungguLama = filtered.length; // Update counter
+
+            document.getElementById('jumlah-menunggu').textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Tiada pesakit menunggu pengesahan.</td></tr>`;
+                return;
+            }
+
+            // TAMBAHAN BAIKI: Guna array join lagi laju dari innerHTML +=
+            let rows = [];
+            filtered.forEach(p => {
+                const id = p.id || 'unknown';
+                rows.push(`
+                    <tr>
+                        <td class="fw-bold">${p.nama || '-'}</td>
+                        <td>${maskIC(p.no_ic)}</td>
+                        <td>${p.no_hp || '-'}</td>
+                        <td>${p.masa || '-'}</td>
+                        <td class="text-center">
+                            <button onclick="terimaPesakit('${id}')" 
+                                    class="btn btn-sm btn-success">
+                                <i class="bi bi-check-circle"></i> Terima & Keluarkan No Giliran
+                            </button>
+                        </td>
+                    </tr>`);
+            });
+            tbody.innerHTML = rows.join(''); // Sekali render je
+        })
+       .catch(err => console.error("Error load menunggu:", err));
+}
+
+// ==================== TERIMA PESAKIT ====================
+function terimaPesakit(pesakit_id) {
+    if (!pesakit_id || pesakit_id === 'unknown' || pesakit_id.length < 10) {
+        alert("ID pesakit tidak sah.\nSila refresh halaman (Ctrl+Shift+R) dan cuba lagi.");
+        console.log("ID yang dihantar tidak sah:", pesakit_id);
+        return;
+    }
+
+    if (!confirm("Terima pesakit ini dan keluarkan nombor giliran?")) return;
+
+    console.log("Menghantar ke backend ? ID:", pesakit_id);
+
+    fetch('/api/terima_pesakit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id: pesakit_id })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert(`Berjaya!\nNombor Giliran: ${result.no_giliran}`);
+            loadMenungguPengesahan();
+            loadSenaraiHariIni();
+            kemaskiniDataHarian();
+        } else {
+            alert(result.message || "Gagal menerima pesakit");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Ralat sambungan. Sila cuba lagi.");
+    });
+}
+
+// ==================== TUKAR STATUS PESAKIT (RAWAT / SELESAI / TIDAK HADIR) ====================
+function tukarStatus(no_giliran, statusBaru) {
+    if (!confirm(`Ubah status nombor ${no_giliran} kepada ${statusBaru.replace('_', ' ')}?`)) return;
+
+    fetch('/api/kemaskini_status', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            no_giliran: no_giliran, 
+            status: statusBaru 
+        })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            loadSenaraiHariIni();   // Refresh senarai
+        } else {
+            alert(result.message || "Gagal mengemaskini status");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Ralat semasa mengemaskini status");
+    });
+}
+
+// ==================== CARIAN PESAKIT LAMA ====================
+function cariPesakitLama() {
+    const tarikh = document.getElementById('carian-tarikh').value;
+    const no_ic = document.getElementById('carian-ic').value.trim();
+    const nama = document.getElementById('carian-nama').value.trim().toLowerCase();
+    if (!tarikh) {
+        alert("Sila pilih tarikh!");
+        return;
+    }
     const tbody = document.getElementById('hasil-carian-lama');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">Mencari...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Mencari...</td></tr>';
     fetch(`/api/get_senarai_tarikh/${tarikh}`)
         .then(res => res.json())
         .then(data => {
+            let senarai = Array.isArray(data) ? data.filter(item => item != null) : [];
+            if (no_ic) {
+                senarai = senarai.filter(p => (p.no_ic || '').replace(/-/g, '').includes(no_ic.replace(/-/g, '')));
+            }
+            if (nama) {
+                senarai = senarai.filter(p => (p.nama || '').toLowerCase().includes(nama));
+            }
             tbody.innerHTML = '';
-            let senarai = Array.isArray(data) ? data : [];
-            senarai = senarai.filter(item => item != null);
             if (senarai.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Tiada rekod pada tarikh ini.</td></tr>`;
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Tiada rekod ditemui.</td></tr>';
                 return;
             }
             senarai.sort((a,b) => (a.no_giliran||0) - (b.no_giliran||0)).forEach(p => {
                 const btnDetail = `<button onclick='lihatDetail(${JSON.stringify(p).replace(/"/g,'&quot;')})' class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></button>`;
                 tbody.innerHTML += `
                     <tr>
-                        <td>${p.no_giliran || '-'}</td>
+                        <td><span class="badge bg-primary">${p.no_giliran || '-'}</span></td>
                         <td>${p.nama || '-'}</td>
-                        <td>${p.no_ic || '-'}</td>
-                        <td>${p.no_hp || '-'}</td>
                         <td>${p.masa || '-'}</td>
-                        <td><span class="badge bg-secondary">${(p.status || 'menunggu').toUpperCase()}</span></td>
+                        <td><span class="badge bg-${p.status === 'selesai' ? 'success' : p.status === 'menunggu' ? 'warning' : 'secondary'}">${(p.status || 'menunggu').toUpperCase()}</span></td>
                         <td class="text-center">${btnDetail}</td>
                     </tr>
                 `;
             });
         })
-        .catch(err => console.error("Error carian:", err));
+        .catch(err => {
+            console.error("Gagal cari pesakit:", err);
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Ralat semasa mencari.</td></tr>';
+        });
 }
 
-// ==================== FUNGSI CAROUSEL ====================
+function lihatDetail(p) {
+    alert(`Detail Pesakit:\n\nNama: ${p.nama}\nNo IC: ${p.no_ic}\nNo HP: ${p.no_hp}\nNo Giliran: ${p.no_giliran}\nStatus: ${p.status}\nMasa Daftar: ${p.masa}`);
+}
 
+// ==================== EXPORT LAPORAN ====================
+document.getElementById('tarikh-export').addEventListener('change', function() {
+    const tarikh = this.value;
+    document.getElementById('btn-excel').href = tarikh ? `/api/export_excel/${tarikh}` : '#';
+    document.getElementById('btn-pdf').href = tarikh ? `/api/export_pdf/${tarikh}` : '#';
+});
+
+// ==================== URUS CAROUSEL IKLAN ====================
 function toggleSlideFields() {
     const type = document.getElementById('slide_type').value;
-    document.getElementById('field_text').style.display = (type === 'text' || type === 'image') ? 'block' : 'none';
-    document.getElementById('field_image').style.display = (type === 'image') ? 'block' : 'none';
-    document.getElementById('field_video').style.display = (type === 'video') ? 'block' : 'none';
+    document.getElementById('field_text').style.display = type === 'image' || type === 'text' ? 'block' : 'none';
+    document.getElementById('field_image').style.display = type === 'image' ? 'block' : 'none';
+    document.getElementById('field_video').style.display = type === 'video' ? 'block' : 'none';
+    const durationInput = document.getElementById('slide_duration');
+    const helpText = document.getElementById('duration_help');
+    if (type === 'video') {
+        durationInput.value = 60;
+        helpText.textContent = 'Untuk video: masukkan panjang sebenar video dalam saat. Cth: 1 minit 7 saat = 67';
+    } else {
+        durationInput.value = 12;
+        helpText.textContent = 'Teks/Gambar: 12 saat adalah sesuai';
+    }
 }
 
-// ==================== LOAD SLIDES (Versi Lebih Cantik) ====================
 function loadSlides() {
     fetch('/api/iklan_carousel')
         .then(res => res.json())
         .then(data => {
             const container = document.getElementById('senarai-slides');
             container.innerHTML = '';
-
             if (!data || data.length === 0) {
-                container.innerHTML = `
-                    <div class="list-group-item text-muted text-center py-4">
-                        Belum ada slide iklan. Klik "Tambah Slide Baru".
-                    </div>`;
+                container.innerHTML = '<div class="list-group-item text-muted text-center py-4">Tiada slide. Klik "Tambah Slide Baru"</div>';
                 return;
             }
-
             data.forEach(slide => {
                 const item = document.createElement('div');
-                item.className = 'list-group-item d-flex justify-content-between align-items-center';
-
-                let jenis = '📝 Teks';
+                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                let jenis = '?? Teks';
                 let extraInfo = '';
-
                 if (slide.type === 'image') {
-                    jenis = '🖼️ Gambar';
-                    extraInfo = slide.image_url ? 
-                        `<br><small class="text-info">Gambar: ${slide.image_url.split('/').pop()}</small>` : '';
-                } 
-                else if (slide.type === 'video') {
-                    jenis = '🎥 Video';
-                    extraInfo = `<br><small class="text-info">YouTube Video</small>`;
+                    jenis = '??? Gambar';
+                    extraInfo = slide.image_url ? `<br><small class="text-info">Gambar: ${slide.image_url.split('/').pop()}</small>` : '';
+                } else if (slide.type === 'video') {
+                    jenis = '?? Video';
+                    extraInfo = `<br><small class="text-info">YouTube | Durasi: ${slide.duration || 60}s</small>`;
                 }
-
                 item.innerHTML = `
                     <div style="flex: 1;">
                         <h6 class="${slide.color || 'text-primary'} mb-1">
@@ -453,11 +712,7 @@ function loadSlides() {
         })
         .catch(err => {
             console.error("Gagal load slides:", err);
-            // Ganti mesej error dengan yang lebih mesra
-            document.getElementById('senarai-slides').innerHTML = `
-                <div class="list-group-item text-muted text-center py-4">
-                    Tiada sambungan ke server. Sila refresh halaman.
-                </div>`;
+            document.getElementById('senarai-slides').innerHTML = `<div class="list-group-item text-muted text-center py-4">Tiada sambungan ke server.</div>`;
         });
 }
 
@@ -470,6 +725,7 @@ function tambahSlideBaru() {
     document.getElementById('slide_content').value = '';
     document.getElementById('slide_image_url').value = '';
     document.getElementById('slide_video_url').value = '';
+    document.getElementById('slide_duration').value = '12';
     toggleSlideFields();
     new bootstrap.Modal(document.getElementById('modalSlide')).show();
 }
@@ -486,11 +742,12 @@ function editSlide(id) {
             document.getElementById('slide_content').value = slide.content || '';
             document.getElementById('slide_image_url').value = slide.image_url || '';
             document.getElementById('slide_video_url').value = slide.video_url || '';
+            document.getElementById('slide_duration').value = slide.duration || (slide.type === 'video' ? 60 : 12);
             toggleSlideFields();
             new bootstrap.Modal(document.getElementById('modalSlide')).show();
         })
         .catch(err => {
-            alert("Gagal memuat data slide. Sila cuba lagi.");
+            alert("Gagal memuat data slide.");
         });
 }
 
@@ -498,21 +755,19 @@ function simpanSlide() {
     const id = document.getElementById('slide_id').value;
     const method = id ? 'PUT' : 'POST';
     const url = id ? `/api/iklan_carousel/${id}` : '/api/iklan_carousel';
-
     const data = {
         type: document.getElementById('slide_type').value,
         title: document.getElementById('slide_title').value.trim(),
         color: document.getElementById('slide_color').value,
         content: document.getElementById('slide_content').value.trim(),
         image_url: document.getElementById('slide_image_url').value.trim(),
-        video_url: document.getElementById('slide_video_url').value.trim()
+        video_url: document.getElementById('slide_video_url').value.trim(),
+        duration: parseInt(document.getElementById('slide_duration').value) || 12
     };
-
     if (!data.title) {
         alert("Tajuk slide tidak boleh kosong!");
         return;
     }
-
     fetch(url, {
         method: method,
         headers: {'Content-Type': 'application/json'},
@@ -521,12 +776,12 @@ function simpanSlide() {
     .then(res => res.json())
     .then(() => {
         bootstrap.Modal.getInstance(document.getElementById('modalSlide')).hide();
-        loadSlides();        // Refresh senarai
+        loadSlides();
         alert('Slide berjaya disimpan!');
     })
     .catch(err => {
         console.error(err);
-        alert("Gagal menyimpan slide. Sila semak sambungan internet.");
+        alert("Gagal menyimpan slide.");
     });
 }
 
@@ -540,10 +795,28 @@ function padamSlide(id) {
 // ==================== INISIALISASI ====================
 window.onload = function() {
     kemaskiniDataHarian();
+    loadSenaraiHariIni();
+	loadMenungguPengesahan();
     loadSlides();
+    document.getElementById('carian-tarikh').valueAsDate = new Date();
+    document.getElementById('tarikh-export').valueAsDate = new Date();
+    document.getElementById('tarikh-export').dispatchEvent(new Event('change'));
 };
 
-setInterval(kemaskiniDataHarian, 5000);
+// TAMBAHAN BAIKI: Pause refresh bila mouse atas table
+let pauseRefresh = false;
+document.querySelector('#senarai-hari-ini').closest('.table-responsive').addEventListener('mouseenter', () => pauseRefresh = true);
+document.querySelector('#senarai-hari-ini').closest('.table-responsive').addEventListener('mouseleave', () => pauseRefresh = false);
+
+setInterval(() => {
+    console.log('Auto refresh jalan:', new Date().toLocaleTimeString());
+    if (!pauseRefresh) { 
+        kemaskiniDataHarian();
+        loadSenaraiHariIni();
+		loadMenungguPengesahan();
+    }
+}, 5000);
+
 </script>
 </body>
 </html>
